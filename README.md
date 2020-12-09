@@ -1,4 +1,5 @@
 # kkimgaug
+This package is wrapper package for albumentations( https://github.com/albumentations-team/albumentations ).
 
 ## Installation
 ```
