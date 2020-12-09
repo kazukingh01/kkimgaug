@@ -1,0 +1,320 @@
+{
+    "proc_names": [
+        "proc_default"
+    ],
+    "bbox_params": {
+        "format": "coco",
+        "min_area":0.0, 
+        "min_visibility":0.0
+    },
+    "keypoint_params": {
+        "format": "xy",
+        "remove_invisible": true
+    },
+    "proc_default": {
+        "proc": [
+            {
+                "class": "OneOf",
+                "params": {
+                    "p": 0.5
+                },
+                "proc": [
+                    {
+                        "class": "Blur",
+                        "params": {
+                            "blur_limit": [3, 7],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "MotionBlur",
+                        "params": {
+                            "blur_limit": [3, 7],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "GaussianBlur",
+                        "params": {
+                            "blur_limit": [3, 7],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "GlassBlur",
+                        "params": {
+                            "sigma": 0.7,
+                            "max_delta": 4,
+                            "p": 1.0
+                        }
+                    }
+                ]
+            },
+            {
+                "class": "OneOf",
+                "params": {
+                    "p": 0.5
+                },
+                "proc": [
+                    {
+                        "class": "GaussNoise",
+                        "params": {
+                            "var_limit": [10, 50],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "ImageCompression",
+                        "params": {
+                            "quality_lower": 99,
+                            "quality_upper": 100,
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "ISONoise",
+                        "params": {
+                            "color_shift": [0.01, 0.05],
+                            "intensity": [0.1, 0.5],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "Downscale",
+                        "params": {
+                            "scale_min": 0.1,
+                            "scale_max": 0.1,
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "MultiplicativeNoise",
+                        "params": {
+                            "multiplier": [0.9, 1.1],
+                            "elementwise": false,
+                            "per_channel": false,
+                            "p": 1.0
+                        }
+                    }
+                    
+                ]
+            },
+            {
+                "class": "OneOf",
+                "params": {
+                    "p": 0.5
+                },
+                "proc": [
+                    {
+                        "class": "HueSaturationValue",
+                        "params": {
+                            "hue_shift_limit": [-20, 20],
+                            "sat_shift_limit": [-30, 30],
+                            "val_shift_limit": [-20, 20],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "RGBShift",
+                        "params": {
+                            "r_shift_limit": [-20, 20],
+                            "g_shift_limit": [-20, 20],
+                            "b_shift_limit": [-20, 20],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "ChannelShuffle",
+                        "params": {
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "ChannelDropout",
+                        "params": {
+                            "channel_drop_range": [1, 1],
+                            "fill_value": 0,
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "Posterize",
+                        "params": {
+                            "num_bits": [1, 4],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "ToGray",
+                        "params": {
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "ToSepia",
+                        "params": {
+                            "p": 1.0
+                        }
+                    }
+                ]
+            },
+            {
+                "class": "OneOf",
+                "params": {
+                    "p": 0.5
+                },
+                "proc": [
+                    {
+                        "class": "InvertImg",
+                        "params": {
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "Normalize",
+                        "params": {
+                            "mean": [0.485, 0.456, 0.406],
+                            "std": [0.229, 0.224, 0.225],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "RandomGamma",
+                        "params": {
+                            "gamma_limit": [80, 120],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "RandomBrightnessContrast",
+                        "params": {
+                            "brightness_limit": [-0.2, 0.2],
+                            "contrast_limit": [-0.2, 0.2],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "CLAHE",
+                        "params": {
+                            "clip_limit": [1, 4],
+                            "tile_grid_size": [8, 8],
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "Solarize",
+                        "params": {
+                            "threshold": 128,
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "FancyPCA",
+                        "params": {
+                            "alpha": 0.1,
+                            "p": 1.0
+                        }
+                    }
+                ]
+            },
+            {
+                "class": "OneOf",
+                "params": {
+                    "p": 0.5
+                },
+                "proc": [
+                    {
+                        "class": "Cutout",
+                        "params": {
+                            "num_holes": 50,
+                            "max_h_size": 8,
+                            "max_w_size": 8,
+                            "p": 1.0
+                        }
+                    }
+                ]
+            },
+            {
+                "class": "OneOf",
+                "params": {
+                    "p": 0.5
+                },
+                "proc": [
+                    {
+                        "class": "RandomSnow",
+                        "params": {
+                            "snow_point_lower": 0.1,
+                            "snow_point_upper": 0.3,
+                            "brightness_coeff": 1,
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "RandomRain",
+                        "params": {
+                            "rain_type": "drizzle",
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "RandomFog",
+                        "params": {
+                            "fog_coef_lower": 0.3,
+                            "fog_coef_upper": 1.0,
+                            "p": 1.0
+                        }
+                    },
+                    {
+                        "class": "RandomShadow",
+                        "params": {
+                            "num_shadows_lower": 1,
+                            "num_shadows_upper": 2,
+                            "shadow_dimension": 5,
+                            "p": 1.0
+                        }
+                    }
+                    
+                ]
+            },
+            {
+                "class": "Flip",
+                "params": {
+                    "p": 1
+                }
+            },
+            {
+                "class": "Rotate",
+                "params": {
+                    "limit": [-180, 180],
+                    "p": 1
+                }
+            },
+            {
+                "class": "ShiftScaleRotate",
+                "params": {
+                    "shift_limit": 0.1,
+                    "scale_limit": 0,
+                    "rotate_limit": 0,
+                    "p": 1
+                }
+            }
+        ],
+        "scale": null,
+        "p": 1
+    }, 
+    "proc_tmp": {
+        "proc": [
+            {
+                "class": "HorizontalFlip",
+                "params": {
+                    "p": 0.5
+                }
+            }
+        ],
+        "scale": [
+            100, 0
+        ],
+        "params": {},
+        "p": 0.5
+    }
+}

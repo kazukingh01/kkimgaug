@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: kkimgaug
+Version: 1.0.0
+Summary: augmentation wrapper package for albumentations
+Home-page: https://github.com/kazukingh01/kkimgaug
+Author: Kazuki Kume
+Author-email: kazukingh01@gmail.com
+License: Public License
+Description: # kkimgaug
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: Private License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
