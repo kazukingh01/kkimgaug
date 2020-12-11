@@ -29,6 +29,7 @@ setup(
         'numpy>=1.18.0',
         'opencv-python>=4.2.0.0',
         'opencv-contrib-python>=4.2.0.0',
+        'more-itertools>=8.6.0'
     ],
     python_requires='>=3.7'
 )
