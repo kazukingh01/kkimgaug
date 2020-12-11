@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 # local packages
-from kkimgaug.util.functions import convert_polygon_to_bool, correct_dirpath
+from kkimgaug.util.functions import convert_polygon_to_bool, correct_dirpath, get_args
 
 # detectron2 packages
 from detectron2.engine import DefaultTrainer, DefaultPredictor
@@ -214,9 +214,7 @@ class Mapper(DatasetMapper):
 
 
 if __name__ == "__main__":
-    from kkimgaug.lib import BaseCompose
-    composer = BaseCompose("./config.json")
-    
+    args = get_args()
     det2 = Det2Simple(
         dataset_name="test",
         coco_json_path="./coco.json",
@@ -225,5 +223,7 @@ if __name__ == "__main__":
         n_classes=2
     )
     image = cv2.imread("./img/img_dog_cat.jpg")
-    #det2.preview_augmentation()
-    det2.train()
+    if   args.get("prev") is not None:
+        det2.preview_augmentation()
+    elif args.get("train") is not None:
+        det2.train()

@@ -8,6 +8,7 @@ Author-email: kazukingh01@gmail.com
 License: Public License
 Description: # kkimgaug
         This package is wrapper package for albumentations( https://github.com/albumentations-team/albumentations ).
+        You can define augmentation with config file like "https://github.com/kazukingh01/kkimgaug/blob/main/tests/config.json"
         
         ## Installation
         ```
@@ -15,27 +16,28 @@ Description: # kkimgaug
         ```
         
         ## A simple example
-        samples is in "https://github.com/kazukingh01/kkimgaug/tree/main/tests"
-        * config.json = "https://github.com/kazukingh01/kkimgaug/blob/main/tests/config.json"
-        * coco.json   = "https://github.com/kazukingh01/kkimgaug/blob/main/tests/coco.json"
-        * image_dir   = "https://github.com/kazukingh01/kkimgaug/tree/main/tests/img"
+        code samples is in "https://github.com/kazukingh01/kkimgaug/tree/main/tests"
         ```
-        import albumentations as A
-        import cv2
-        import json
+        git clone https://github.com/kazukingh01/kkimgaug.git
+        cd kkimgaug
+        ```
         
-        # local package
-        from kkimgaug.lib import BaseCompose, CocoVisualizer
+        ### Viewer (check augmentation)
+        You can see the applied augmentaion in the upper left corner of the image like this.
+        ![image](https://i.imgur.com/2D8GxAY.png)
+        ```
+        python viewer.py
+        ```
         
-        image = cv2.imread("./img/img_dog_cat.jpg")
-        
-        # Augment an image
-        visualizer = CocoVisualizer(
-            config="./config.json",
-            coco_json="./coco.json",
-            image_dir="./img"
-        )
-        visualizer.samples(0, 100)
+        ### Detectron2
+        If you use in detectron2, see det2_sample.py
+        ```
+        python det2_sample.py ---train
+        ```
+        and you can see applied augmentaions in detectron2.
+        Images applied augmentaions is in "output_augmentations" directory.
+        ```
+        python det2_sample.py ---prev
         ```
         
 Platform: UNKNOWN

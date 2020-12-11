@@ -1,8 +1,24 @@
-import os, cv2, copy
+import os, sys, cv2, copy
 import numpy as np
 from typing import List
 import more_itertools as itr
 
+def get_args() -> dict:
+    dict_ret = {}
+    args = sys.argv
+    dict_ret["__fname"] = args[0]
+    for i, x in enumerate(args):
+        if   x[:4] == "----":
+            # この引数の後にはLISTで格納する
+            dict_ret[x[4:]] = []
+            for _x in args[i+1:]:
+                if _x[:2] != "--": dict_ret[x[4:]].append(_x)
+                else: break
+        elif x[:3] == "---":
+            dict_ret[x[3:]] = True
+        elif x[:2] == "--":
+            dict_ret[x[2:]] = args[i+1]
+    return dict_ret
 
 def correct_dirpath(dirpath: str) -> str:
     if os.name == "nt":
