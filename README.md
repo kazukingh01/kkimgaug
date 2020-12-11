@@ -1,8 +1,6 @@
 # kkimgaug
 This package is wrapper package for albumentations( https://github.com/albumentations-team/albumentations ).
-
 You can define augmentation with config file like "https://github.com/kazukingh01/kkimgaug/blob/main/tests/config.json"
-
 Augmentations and pameters are according to the albumentations. see documentations(https://albumentations.ai/docs/). 
 
 ## Installation
