@@ -14,4 +14,4 @@ visualizer = CocoVisualizer(
     image_dir="./img"
 )
 visualizer.show(0)
-visualizer.samples(0, 100)
+transformed = visualizer.samples(0, 100, is_kpt=False, is_mask=False)

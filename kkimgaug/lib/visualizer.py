@@ -2,11 +2,12 @@ import json
 import numpy as np
 import cv2
 from typing import Union, List
+from functools import partial
 
 # locla package
 from kkimgaug.lib import BaseCompose
 from kkimgaug.util.visualize import visualize
-from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8
+from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, get_applied_augmentations
 from kkimgaug.util.functions import correct_dirpath
 
 
@@ -66,7 +67,8 @@ class CocoVisualizer:
         self,
         config: Union[str, dict],
         coco_json: Union[str, dict],
-        image_dir: str=None
+        image_dir: str=None,
+        drow_on_image: bool=True
     ):
         """
         Augmentation Sample Visualize for rcoco format 
@@ -79,8 +81,16 @@ class CocoVisualizer:
         """
         self.composer = BaseCompose(
             config=config,
-            preproc=[bgr2rgb, mask_from_polygon_to_bool, kpt_from_coco_to_xy],
-            aftproc=[rgb2bgr, to_uint8]
+            preproc=[
+                bgr2rgb, 
+                mask_from_polygon_to_bool, 
+                kpt_from_coco_to_xy
+            ],
+            aftproc=[
+                rgb2bgr, 
+                partial(get_applied_augmentations, drow_on_image=drow_on_image),
+                to_uint8
+            ]
         )
         self.coco = json.load(open(coco_json)) if isinstance(coco_json, str) else coco_json
         self.coco = CocoItem(self.coco)
@@ -140,10 +150,11 @@ class CocoVisualizer:
         for _ in range(max_samples):
             transformed = self.composer(
                 image=img,
-                bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns], 
-                label_bbox=[x["name"] for x in list_cat],
-                mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns],
-                keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns],
-                label_kpt=[x["keypoints"] if x.get("keypoints") else [] for x in list_cat],
+                bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None, 
+                label_bbox=[x["name"] for x in list_cat] if is_bbox else None,
+                mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
+                keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns]if is_kpt else None,
+                label_kpt=[x["keypoints"] if x.get("keypoints") else [] for x in list_cat]if is_kpt else None,
             )
             self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt)
+        return transformed

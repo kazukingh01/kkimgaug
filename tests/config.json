@@ -43,8 +43,8 @@
                     {
                         "class": "GlassBlur",
                         "params": {
-                            "sigma": 0.7,
-                            "max_delta": 4,
+                            "sigma": 0.3,
+                            "max_delta": 2,
                             "p": 1.0
                         }
                     }
@@ -82,8 +82,8 @@
                     {
                         "class": "Downscale",
                         "params": {
-                            "scale_min": 0.1,
-                            "scale_max": 0.1,
+                            "scale_min": 0.75,
+                            "scale_max": 0.90,
                             "p": 1.0
                         }
                     },
@@ -175,7 +175,7 @@
                         "params": {
                             "mean": [0.485, 0.456, 0.406],
                             "std": [0.229, 0.224, 0.225],
-                            "p": 1.0
+                            "p": 0
                         }
                     },
                     {
@@ -253,7 +253,7 @@
                         "class": "RandomRain",
                         "params": {
                             "rain_type": "drizzle",
-                            "p": 1.0
+                            "p": 0
                         }
                     },
                     {
@@ -261,7 +261,7 @@
                         "params": {
                             "fog_coef_lower": 0.3,
                             "fog_coef_upper": 1.0,
-                            "p": 1.0
+                            "p": 0
                         }
                     },
                     {
@@ -270,7 +270,7 @@
                             "num_shadows_lower": 1,
                             "num_shadows_upper": 2,
                             "shadow_dimension": 5,
-                            "p": 1.0
+                            "p": 0
                         }
                     }
                     
@@ -286,7 +286,7 @@
                 "class": "Rotate",
                 "params": {
                     "limit": [-180, 180],
-                    "p": 1
+                    "p": 0
                 }
             },
             {

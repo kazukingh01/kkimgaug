@@ -1,6 +1,8 @@
-import os, cv2
+import os, cv2, copy
 import numpy as np
 from typing import List
+import more_itertools as itr
+
 
 def correct_dirpath(dirpath: str) -> str:
     if os.name == "nt":
@@ -30,3 +32,53 @@ def convert_polygon_to_bool(img_height: int, img_width: int, segmentations: List
     # boolrean に変更する
     img_add = (img_add[:, :, 0] > 0).astype(bool)
     return img_add
+
+def convert_1d_array(arrays: List[object]):
+    """
+    Usage::
+        >>> convert_1d_array([1,2,3, [[1,1,23],2,3]])
+        [1, 2, 3, 1, 1, 23, 2, 3]
+    """
+    arrays = copy.deepcopy(arrays)
+    for i, x in enumerate(arrays):
+        if not (isinstance(x, list) or isinstance(x, tuple)):
+            arrays[i] = [x]
+    arrays = list(itr.flatten(arrays))
+    i = 0
+    if len(arrays) > 0:
+        while(1):
+            if isinstance(arrays[i], list) or isinstance(arrays[i], tuple):
+                arrays = convert_1d_array(arrays)
+                i = 0
+            else:
+                i += 1
+            if len(arrays) == i:
+                break
+    return arrays
+
+def convert_same_dimension(arrays: List[object], array_like: List[object]):
+    """
+    Usage::
+        >>> convert_same_dimension([0,1,2,3,4,5,6,7,8,9], [1, [1, 2], [1, 2, [1, 2, [0, 0], 3]]])
+        [0, [1, 2], [3, 4, [5, 6, [7, 8], 9]]]
+    """
+    arrays = convert_1d_array(arrays)
+    if len(arrays) != len(convert_1d_array(array_like)):
+        raise Exception(f'Number of items inside lists is different.')
+    def work(_list1, _list2) -> List[object]:
+        list_ret = []
+        for i, x in enumerate(_list2):
+            if isinstance(x, list) or isinstance(x, tuple):
+                list_ret.append(
+                    work(
+                        _list1[
+                            len(convert_1d_array(list_ret)):
+                            len(convert_1d_array(list_ret))+len(convert_1d_array(x))
+                        ], 
+                        x
+                    )
+                )
+            else:
+                list_ret.append(_list1[len(convert_1d_array(list_ret))])
+        return list_ret
+    return work(arrays, array_like)

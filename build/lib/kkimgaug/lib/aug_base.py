@@ -77,7 +77,7 @@ def create_compose(config: List[dict], **kwargs) -> A.Compose:
                     getattr(A, dictwk["class"])(**(dictwk["params"] if dictwk["params"] else {}))
                 )
         return list_proc
-    return A.Compose(__loop(config), **kwargs)
+    return A.ReplayCompose(__loop(config), **kwargs)
 
 
 
@@ -85,11 +85,14 @@ class BaseCompose:
     def __init__(
         self, config: Union[str, dict], 
         preproc: List[Callable[[dict], dict]]=[
-            bgr2rgb, mask_from_polygon_to_bool, kpt_from_coco_to_xy
+            bgr2rgb, 
+            mask_from_polygon_to_bool, 
+            kpt_from_coco_to_xy
         ], 
-        aftproc: List[Callable[[dict], dict]]=[rgb2bgr, to_uint8], 
-        label_bbox_fields: List[str]=['label_bbox'],
-        label_kpt_fields: List[str]=['label_kpt']
+        aftproc: List[Callable[[dict], dict]]=[
+            rgb2bgr, 
+            to_uint8
+        ]
     ):
         """
         参考: https://qiita.com/kurilab/items/b69e1be8d0224ae139ad
@@ -181,12 +184,14 @@ class BaseCompose:
         self.keypoint_format = config.get("keypoint_params").get("format") if config.get("keypoint_params") and config.get("keypoint_params").get("format") else "xy"
         self.keypoint_params = config["keypoint_params"] if config.get("keypoint_params") else {}
         if self.keypoint_params.get("format"): del self.keypoint_params["format"]
+        self.label_bbox_fields: List[str]=['label_bbox'] # Fix value
+        self.label_kpt_fields : List[str]=['label_kpt' ] # Fix value
         for proc_name in config["proc_names"]:
             self.list_proc.append(
                 create_compose(
                     config[proc_name]["proc"],
-                    bbox_params=A.BboxParams(self.box_format, **self.box_params, label_fields=label_bbox_fields),
-                    keypoint_params=A.KeypointParams(self.keypoint_format, **self.keypoint_params, label_fields=label_kpt_fields)
+                    bbox_params=A.BboxParams(self.box_format, **self.box_params, label_fields=self.label_bbox_fields),
+                    keypoint_params=A.KeypointParams(self.keypoint_format, **self.keypoint_params, label_fields=self.label_kpt_fields)
                 )
             )
             self.list_p.append(config[proc_name]["p"])
@@ -198,18 +203,22 @@ class BaseCompose:
         self.list_scale = np.array(self.list_scale).reshape(-1, 2)
 
 
-    def __call__(self, image: np.ndarray, bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, **kwargs):
+    def __call__(
+        self, image: np.ndarray, 
+        bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, 
+        **kwargs
+    ):
         """
         適用するCompose setを１つ決める.
         bboxのannotation があれば、そのサイズで適用するComposeを分ける
         """
         # define dictionary
-        transformed = self.to_custom_dict(image=image, bboxes=bboxes, mask=mask, label_bbox=label_bbox, keypoints=keypoints, label_kpt=label_kpt, **kwargs)
+        transformed = self.to_custom_dict(image=image, bboxes=bboxes, mask=mask, label_bbox=label_bbox, keypoints=keypoints, label_kpt=label_kpt)
         # pre processing
         transformed = self.preproc(transformed)
         # choose one compose
         ndf_bool = np.ones_like(self.list_p).astype(bool)
-        if bboxes:
+        if bboxes is not None:
             area = float("inf")
             for _, _, width, height in bboxes:
                 if area > width * height:
@@ -231,6 +240,29 @@ class BaseCompose:
         return transformed
 
 
+    def replay(
+        self, info_replay, image: np.ndarray, 
+        bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, 
+        is_preproc: bool=True, is_aftproc: bool=True,
+        **kwargs
+    ):
+        """
+        Usage::
+            self.replay(transformed['replay'], image, ...)
+        """
+        # define dictionary
+        transformed = self.to_custom_dict(image=image, bboxes=bboxes, mask=mask, label_bbox=label_bbox, keypoints=keypoints, label_kpt=label_kpt)
+        # pre processing
+        if is_preproc:
+            transformed = self.preproc(transformed)
+        # main processing. 0 index fix.
+        transformed = self.list_proc[0].replay(info_replay, **transformed)
+        # after processing
+        if is_aftproc:
+            transformed = self.aftproc(transformed)
+        return transformed
+        
+
     @classmethod
     def to_custom_dict(cls, image: np.ndarray, bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, **kwargs):
         # image copy
@@ -238,11 +270,11 @@ class BaseCompose:
         # define dictionary
         transformed = {}
         transformed["image"]  = image
-        transformed["bboxes"] = bboxes if bboxes else []
-        if mask: transformed["mask"] = mask
-        transformed["label_bbox"] = label_bbox if label_bbox else []
-        transformed["keypoints"]  = keypoints if keypoints else []
-        transformed["label_kpt"]  = label_kpt if label_kpt else []
+        transformed["bboxes"] = bboxes if bboxes is not None else []
+        if mask is not None: transformed["mask"] = mask
+        transformed["label_bbox"] = label_bbox if label_bbox is not None else []
+        transformed["keypoints"]  = keypoints if keypoints is not None else []
+        transformed["label_kpt"]  = label_kpt if label_kpt is not None else []
         for x, y in kwargs.items():
             transformed[x] = y
         return transformed
