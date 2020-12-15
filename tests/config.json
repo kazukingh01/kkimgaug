@@ -1,11 +1,14 @@
 {
+    "memo": {
+        "#1": "see https://qiita.com/kurilab/items/b69e1be8d0224ae139ad"
+    },
     "proc_names": [
         "proc_default"
     ],
     "bbox_params": {
         "format": "coco",
         "min_area":0.0, 
-        "min_visibility":0.0
+        "min_visibility":0.4
     },
     "keypoint_params": {
         "format": "xy",
@@ -22,14 +25,14 @@
                     {
                         "class": "Blur",
                         "params": {
-                            "blur_limit": [3, 7],
+                            "blur_limit": [3, 5],
                             "p": 1.0
                         }
                     },
                     {
                         "class": "MotionBlur",
                         "params": {
-                            "blur_limit": [3, 7],
+                            "blur_limit": [3, 5],
                             "p": 1.0
                         }
                     },
@@ -43,9 +46,9 @@
                     {
                         "class": "GlassBlur",
                         "params": {
-                            "sigma": 0.3,
-                            "max_delta": 2,
-                            "p": 1.0
+                            "sigma": 0.05,
+                            "max_delta": 1,
+                            "p": 0
                         }
                     }
                 ]
@@ -64,7 +67,7 @@
                         }
                     },
                     {
-                        "class": "ImageCompression",
+                        "class": "JpegCompression",
                         "params": {
                             "quality_lower": 99,
                             "quality_upper": 100,
@@ -279,14 +282,28 @@
             {
                 "class": "Flip",
                 "params": {
-                    "p": 1
+                    "p": 0
+                }
+            },
+            {
+                "class": "HorizontalFlip",
+                "params": {
+                    "p": 0
+                }
+            },
+            {
+                "class": "MyRandomSizedCrop",
+                "params": {
+                    "min_max_h_scale": [0.6, 0.95],
+                    "min_max_w_scale": [0.6, 0.95],
+                    "p": 0.9
                 }
             },
             {
                 "class": "Rotate",
                 "params": {
                     "limit": [-180, 180],
-                    "p": 1
+                    "p": 0
                 }
             },
             {
@@ -295,7 +312,7 @@
                     "shift_limit": 0.1,
                     "scale_limit": 0,
                     "rotate_limit": 0,
-                    "p": 1
+                    "p": 0
                 }
             }
         ],

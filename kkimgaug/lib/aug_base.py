@@ -8,6 +8,7 @@ import cv2
 import albumentations as A
 
 # local files
+import kkimgaug.lib.transforms as T
 from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, bbox_label_auto, check_coco_annotations, mask_inside_bbox
 
 __all__ = [
@@ -74,7 +75,8 @@ def create_compose(config: List[dict], **kwargs) -> A.Compose:
                 )
             else:
                 list_proc.append(
-                    getattr(A, dictwk["class"])(**(dictwk["params"] if dictwk["params"] else {}))
+                    (getattr(T, dictwk["class"])(**(dictwk["params"] if dictwk["params"] else {}))) if hasattr(T, dictwk["class"]) else \
+                    (getattr(A, dictwk["class"])(**(dictwk["params"] if dictwk["params"] else {}))) 
                 )
         return list_proc
     return A.ReplayCompose(__loop(config), **kwargs)

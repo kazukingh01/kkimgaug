@@ -122,11 +122,11 @@ class CocoVisualizer:
     def _show(self, transformed: dict, is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True):
         visualize(
             transformed["image"],
-            bboxes=transformed["bboxes"] if is_bbox else None,
-            class_names=transformed["label_bbox"] if is_bbox else None,
-            mask=transformed["mask"] if is_mask else None,
-            keypoints=transformed["keypoints"] if is_kpt else None,
-            class_names_kpt=transformed["label_kpt"] if is_kpt else None
+            bboxes=transformed["bboxes"] if is_bbox and transformed.get("bboxes") is not None else None,
+            class_names=transformed["label_bbox"] if is_bbox and transformed.get("label_bbox") is not None else None,
+            mask=transformed["mask"] if is_mask and transformed.get("mask") is not None else None,
+            keypoints=transformed["keypoints"] if is_kpt and transformed.get("keypoints") is not None else None,
+            class_names_kpt=transformed["label_kpt"] if is_kpt and transformed.get("label_kpt") is not None else None
         )
     
     def show(self, item: Union[int, str], is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True):

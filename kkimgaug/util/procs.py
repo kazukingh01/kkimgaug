@@ -34,24 +34,29 @@ def check_coco_annotations(transformed: dict, label_name_bbox: str="bboxes", lab
                     'bbox and mask annotation length is different. ' + \
                     f'bbox: {len(transformed[label_name_bbox])}, mask: {len(transformed[label_name_mask])}'
                 )
-            for polygon in transformed[label_name_mask]:
-                if not (isinstance(polygon, list) or isinstance(polygon, tuple)):
-                    raise Exception("""mask annotation format is following format.
+            if len(convert_1d_array(transformed[label_name_mask])) == 0:
+                del transformed[label_name_mask] # mask key bust be deleted.
+            else:
+                for polygon in transformed[label_name_mask]:
+                    if not (isinstance(polygon, list) or isinstance(polygon, tuple)):
+                        raise Exception("""mask annotation format is following format.
 [
     [[x11, y11, x12, y12, x13, y13, ...] <- seg1 , [x21, y21, ...] <- seg2 , ..], <- instance1
     [[x11, y11, x12, y12, x13, y13, ...] <- seg1 , [x21, y21, ...] <- seg2 , ..], <- instance2
     ...
-]"""                )
-                if len(polygon) == 0:
-                    raise Exception(f"polygon length is zero. {transformed[label_name_mask]}")
+]"""                  )
+                    if len(polygon) == 0:
+                        raise Exception(f"polygon length is zero. {transformed[label_name_mask]}")
         if transformed.get(label_name_kpt) is not None and len(transformed[label_name_kpt]) > 0:
             if len(transformed[label_name_bbox]) != len(transformed[label_name_kpt]):
                 raise Exception(
                     'bbox and keypoints annotation length is different. ' + \
-                    f'bbox: {len(transformed[label_name_bbox])}, mask: {len(transformed[label_name_kpt])}'
+                    f'bbox: {len(transformed[label_name_bbox])}, keypoints: {len(transformed[label_name_kpt])}'
                 )
+            if len(convert_1d_array(transformed[label_name_kpt])) == 0:
+                transformed[label_name_kpt] = []
             base_length = None
-            for keypoints in transformed[label_name_mask]:
+            for keypoints in transformed[label_name_kpt]:
                 if not (isinstance(keypoints, list) or isinstance(keypoints, tuple)):
                     raise Exception("""keypoints annotation format is following format.
 [
@@ -61,7 +66,7 @@ def check_coco_annotations(transformed: dict, label_name_bbox: str="bboxes", lab
 ]"""                )
                 if base_length is None: base_length = len(keypoints)
                 if len(keypoints) != base_length:
-                    raise Exception(f"keypoints length is different. {transformed[label_name_mask]}")
+                    raise Exception(f"keypoints length is different. {transformed[label_name_kpt]}")
     return transformed
 
 def bbox_label_auto(transformed: dict, label_name: str="bboxes", label_name_class: str="label_bbox"):
