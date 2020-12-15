@@ -19,7 +19,7 @@ cd kkimgaug
 You can see the applied augmentaion in the upper left corner of the image like this.
 ![image](https://i.imgur.com/2D8GxAY.png)
 ```
-python viewer.py
+python viewer.py --dir ./img/ --coco ./coco.json --config ./config.json 
 ```
 
 
