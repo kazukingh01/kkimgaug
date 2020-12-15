@@ -23,8 +23,8 @@ python viewer.py
 ```
 
 
-### Detectron2
-If you use in detectron2, see det2_sample.py
+### Detectron2( over virsion 0.3 !!)
+If you use in detectron2, see https://github.com/kazukingh01/kkimgaug/blob/main/tests/det2_sample.py#L42. Use Mapper.
 ```
 python det2_sample.py ---train
 ```
