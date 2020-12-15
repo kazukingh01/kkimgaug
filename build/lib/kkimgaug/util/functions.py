@@ -98,3 +98,20 @@ def convert_same_dimension(arrays: List[object], array_like: List[object]):
                 list_ret.append(_list1[len(convert_1d_array(list_ret))])
         return list_ret
     return work(arrays, array_like)
+
+def bbox_from_mask(mask: np.ndarray, format: str="coco") -> (float, float, float, float):
+    """
+    params::
+        mask: np.ndarray[bool]
+        format:
+            coco: x, y, w, h
+            xy: x_min, y_min, x_max, y_max
+    """
+    y_min = np.where(mask)[0].min()
+    y_max = np.where(mask)[0].max()
+    x_min = np.where(mask)[1].min()
+    x_max = np.where(mask)[1].max()
+    if format == "coco":
+        return x_min, y_min, x_max - x_min, y_max - y_min
+    if format == "xy":
+        return x_min, y_min, x_max, y_max

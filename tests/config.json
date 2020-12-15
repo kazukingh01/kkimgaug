@@ -286,7 +286,7 @@
                 "class": "Rotate",
                 "params": {
                     "limit": [-180, 180],
-                    "p": 0
+                    "p": 1
                 }
             },
             {

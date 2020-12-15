@@ -7,8 +7,9 @@ from functools import partial
 # locla package
 from kkimgaug.lib import BaseCompose
 from kkimgaug.util.visualize import visualize
-from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, get_applied_augmentations
-from kkimgaug.util.functions import correct_dirpath
+from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, get_applied_augmentations, \
+    check_coco_annotations, bbox_label_auto, mask_inside_bbox, bbox_compute_from_mask
+from kkimgaug.util.functions import correct_dirpath, convert_1d_array
 
 
 __all__ = [
@@ -83,13 +84,17 @@ class CocoVisualizer:
             config=config,
             preproc=[
                 bgr2rgb, 
-                mask_from_polygon_to_bool, 
+                check_coco_annotations,
+                bbox_label_auto,
+                mask_from_polygon_to_bool,
                 kpt_from_coco_to_xy
             ],
             aftproc=[
-                rgb2bgr, 
+                rgb2bgr,
+                mask_inside_bbox,
+                bbox_compute_from_mask,
                 partial(get_applied_augmentations, drow_on_image=drow_on_image),
-                to_uint8
+                to_uint8,
             ]
         )
         self.coco = json.load(open(coco_json)) if isinstance(coco_json, str) else coco_json
@@ -132,29 +137,37 @@ class CocoVisualizer:
         """
         img = self.get_image(item)
         list_anns, list_cat = self.coco[item]
+        ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
+        ndf_label_kpt  = np.array(convert_1d_array([x["keypoints"] if x.get("keypoints") else [] for x in list_cat])) if is_kpt else None
         transformed = self.composer.to_custom_dict(
             image=img,
-            bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns], 
-            label_bbox=[x["name"] for x in list_cat],
+            bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns],
             mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns],
             keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns],
-            label_kpt=[x["keypoints"] if x.get("keypoints") else [] for x in list_cat],
         )
         transformed = self.composer.preproc(transformed)
         transformed = self.composer.aftproc(transformed)
+        if ndf_label_bbox is not None and len(ndf_label_bbox) > 0:
+            transformed["label_bbox"] = ndf_label_bbox[transformed["label_bbox"]].tolist()
+        if ndf_label_kpt is not None and len(ndf_label_kpt) > 0:
+            transformed["label_kpt"] = ndf_label_kpt[transformed["label_kpt"]].tolist()
         self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt)
 
     def samples(self, item: Union[int, str], max_samples: int=10, is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True):
         img = self.get_image(item)
         list_anns, list_cat = self.coco[item]
+        ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
+        ndf_label_kpt  = np.array(convert_1d_array([x["keypoints"] if x.get("keypoints") else [] for x in list_cat])) if is_kpt else None
         for _ in range(max_samples):
             transformed = self.composer(
                 image=img,
                 bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None, 
-                label_bbox=[x["name"] for x in list_cat] if is_bbox else None,
                 mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
                 keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns]if is_kpt else None,
-                label_kpt=[x["keypoints"] if x.get("keypoints") else [] for x in list_cat]if is_kpt else None,
             )
+            if ndf_label_bbox is not None and len(ndf_label_bbox) > 0:
+                transformed["label_bbox"] = ndf_label_bbox[transformed["label_bbox"]].tolist()
+            if ndf_label_kpt is not None and len(ndf_label_kpt) > 0:
+                transformed["label_kpt"] = ndf_label_kpt[transformed["label_kpt"]].tolist()
             self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt)
         return transformed

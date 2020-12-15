@@ -8,7 +8,7 @@ import cv2
 import albumentations as A
 
 # local files
-from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8
+from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, bbox_label_auto, check_coco_annotations, mask_inside_bbox
 
 __all__ = [
     "BaseCompose",
@@ -86,12 +86,15 @@ class BaseCompose:
         self, config: Union[str, dict], 
         preproc: List[Callable[[dict], dict]]=[
             bgr2rgb, 
+            check_coco_annotations,
+            bbox_label_auto,
             mask_from_polygon_to_bool, 
             kpt_from_coco_to_xy
         ], 
         aftproc: List[Callable[[dict], dict]]=[
-            rgb2bgr, 
-            to_uint8
+            rgb2bgr,
+            to_uint8,
+            mask_inside_bbox
         ]
     ):
         """
