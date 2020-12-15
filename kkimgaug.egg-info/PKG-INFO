@@ -7,12 +7,13 @@ Author: Kazuki Kume
 Author-email: kazukingh01@gmail.com
 License: Public License
 Description: # kkimgaug
-        This package is wrapper package for albumentations( https://github.com/albumentations-team/albumentations ).
-        You can define augmentation with config file like "https://github.com/kazukingh01/kkimgaug/blob/main/tests/config.json"
+        - This package is wrapper package for albumentations( https://github.com/albumentations-team/albumentations ).
+        - You can define augmentation with config file like "https://github.com/kazukingh01/kkimgaug/blob/main/tests/config.json"
+        - Augmentations and pameters are according to the albumentations. see documentations(https://albumentations.ai/docs/). 
         
         ## Installation
         ```
-        pip install git+https://github.com/kazukingh01/kkimgaug.git
+        pip install git+https://github.com/kazukingh01/kkimgaug.git@v1.0.1
         ```
         
         ## A simple example
@@ -26,11 +27,12 @@ Description: # kkimgaug
         You can see the applied augmentaion in the upper left corner of the image like this.
         ![image](https://i.imgur.com/2D8GxAY.png)
         ```
-        python viewer.py
+        python viewer.py --dir ./img/ --coco ./coco.json --config ./config.json 
         ```
         
-        ### Detectron2
-        If you use in detectron2, see det2_sample.py
+        
+        ### Detectron2( over virsion 0.3 !!)
+        If you use in detectron2, see https://github.com/kazukingh01/kkimgaug/blob/main/tests/det2_sample.py#L42. Use Mapper.
         ```
         python det2_sample.py ---train
         ```
