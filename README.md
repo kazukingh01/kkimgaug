@@ -5,7 +5,7 @@
 
 ## Installation
 ```
-pip install git+https://github.com/kazukingh01/kkimgaug.git@v1.0.0
+pip install git+https://github.com/kazukingh01/kkimgaug.git@v1.0.1
 ```
 
 ## A simple example
