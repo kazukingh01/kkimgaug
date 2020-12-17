@@ -25,7 +25,9 @@ python viewer.py --dir ./img/ --coco ./coco.json --config ./config.json
 
 ### Detectron2( over virsion 0.3 !!)
 If you use in detectron2, see https://github.com/kazukingh01/kkimgaug/blob/main/tests/det2_sample.py#L42. Use Mapper.
+
 The definition is as follows.
+
 https://github.com/kazukingh01/kkimgaug/blob/9844b3b97aabfa3360f458a269e9eab9c4a1ffc5/kkimgaug/lib/aug_det2.py#L64-L84
 ```
 python det2_sample.py ---train
