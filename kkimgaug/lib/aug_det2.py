@@ -19,7 +19,7 @@ from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, mas
 class Det2Compose(BaseCompose):
     def __init__(
         self, config: Union[str, dict], 
-        drow_on_image: bool=False
+        draw_on_image: bool=False
     ):
         super().__init__(
             config=config,
@@ -36,7 +36,7 @@ class Det2Compose(BaseCompose):
                 bbox_compute_from_mask,
                 partial(mask_from_bool_to_polygon, ignore_n_point=6),
                 restore_kpt_coco_format,
-                partial(get_applied_augmentations, drow_on_image=drow_on_image),
+                partial(get_applied_augmentations, draw_on_image=draw_on_image),
                 to_uint8,
             ]
         )
