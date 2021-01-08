@@ -1,4 +1,5 @@
 import albumentations as A
+import os
 import cv2
 import json
 
@@ -6,7 +7,6 @@ import json
 from kkimgaug.util.functions import get_args
 from kkimgaug.lib import BaseCompose, CocoVisualizer
 
-image = cv2.imread("./img/img_dog_cat.jpg")
 args = get_args()
 
 # Augment an image
@@ -16,4 +16,4 @@ visualizer = CocoVisualizer(
     image_dir=args.get("dir")
 )
 visualizer.show(0)
-transformed = visualizer.samples(0, 100, is_kpt=True, is_mask=True)
+transformed = visualizer.samples(0 if args.get("img") is None else os.path.basename(args.get("img")), 100, is_kpt=True, is_mask=True)

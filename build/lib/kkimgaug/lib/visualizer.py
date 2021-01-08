@@ -69,7 +69,7 @@ class CocoVisualizer:
         config: Union[str, dict],
         coco_json: Union[str, dict],
         image_dir: str=None,
-        drow_on_image: bool=True
+        draw_on_image: bool=True
     ):
         """
         Augmentation Sample Visualize for rcoco format 
@@ -93,7 +93,7 @@ class CocoVisualizer:
                 rgb2bgr,
                 mask_inside_bbox,
                 bbox_compute_from_mask,
-                partial(get_applied_augmentations, drow_on_image=drow_on_image),
+                partial(get_applied_augmentations, draw_on_image=draw_on_image),
                 to_uint8,
             ]
         )

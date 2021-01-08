@@ -222,7 +222,7 @@ def restore_kpt_coco_format(transformed: dict):
         transformed["keypoints"] = convert_same_dimension(list_kpt, transformed["keypoints_saved"])
     return transformed
 
-def get_applied_augmentations(transformed: dict, drow_on_image: bool=False):
+def get_applied_augmentations(transformed: dict, draw_on_image: bool=False):
     if transformed.get("replay") is not None:
         def work(list_augs: dict):
             list_ret = []
@@ -236,7 +236,7 @@ def get_applied_augmentations(transformed: dict, drow_on_image: bool=False):
         list_applied = work(transformed["replay"]["transforms"])
         list_applied = convert_1d_array(list_applied)
         transformed["__replay"] = list_applied
-        if drow_on_image:
+        if draw_on_image:
             img = transformed["image"]
             x_min, y_min = 0, 0
             for aug in list_applied:

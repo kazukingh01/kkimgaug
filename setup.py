@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='kkimgaug',
-    version='1.0.0',
+    version='1.0.2',
     description='augmentation wrapper package for albumentations',
     long_description=long_description,
     long_description_content_type="text/markdown",
