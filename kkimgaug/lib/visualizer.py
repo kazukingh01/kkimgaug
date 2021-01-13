@@ -150,7 +150,7 @@ class Visualizer:
                 int or str. image id or image name
         """
         img = self.get_image(item)
-        list_anns, list_cat, ndf_label_bbox, ndf_label_kpt = [], None, None, None
+        list_anns, list_cat, ndf_label_bbox, ndf_label_kpt = [], [], np.zeros(0), np.zeros(0)
         if self.coco is not None:
             list_anns, list_cat = self.coco[item]
             ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
