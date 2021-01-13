@@ -294,8 +294,8 @@
             {
                 "class": "MyRandomSizedCrop",
                 "params": {
-                    "min_max_h_scale": [0.6, 0.95],
-                    "min_max_w_scale": [0.6, 0.95],
+                    "min_max_h_scale": [0.2, 0.95],
+                    "min_max_w_scale": [0.2, 0.95],
                     "p": 0.9
                 }
             },
@@ -303,7 +303,9 @@
                 "class": "Rotate",
                 "params": {
                     "limit": [-180, 180],
-                    "p": 0
+                    "interpolation": "cv2.INTER_LINEAR",
+                    "border_mode": "cv2.BORDER_CONSTANT",
+                    "p": 1.0
                 }
             },
             {

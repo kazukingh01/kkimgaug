@@ -1,7 +1,19 @@
-import os, sys, cv2, copy
+import os, sys, cv2, copy, glob, re
 import numpy as np
 from typing import List
 import more_itertools as itr
+
+
+__all__ = [
+    "get_args",
+    "correct_dirpath",
+    "get_file_list",
+    "convert_polygon_to_bool",
+    "convert_1d_array",
+    "convert_same_dimension",
+    "bbox_from_mask",
+]
+
 
 def get_args() -> dict:
     dict_ret = {}
@@ -25,6 +37,14 @@ def correct_dirpath(dirpath: str) -> str:
         return dirpath if dirpath[-1] == "\\" else (dirpath + "\\")
     else:
         return dirpath if dirpath[-1] == "/" else (dirpath + "/")
+
+def get_file_list(dirpath: str, regex_list: List[str] = []) -> List[str]:
+    dirpath = correct_dirpath(dirpath)
+    file_list_org = glob.glob(dirpath + "**", recursive=True)
+    file_list     = []
+    for regstr in regex_list:
+        file_list += list(filter(lambda x: len(re.findall(regstr, x)) > 0, file_list_org))
+    return file_list if len(regex_list) > 0 else file_list_org
 
 def convert_polygon_to_bool(img_height: int, img_width: int, segmentations: List[List[float]], outline_only: bool=False) -> np.ndarray:
     """

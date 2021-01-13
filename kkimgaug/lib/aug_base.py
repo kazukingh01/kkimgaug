@@ -11,9 +11,11 @@ import albumentations as A
 import kkimgaug.lib.transforms as T
 from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, bbox_label_auto, check_coco_annotations, mask_inside_bbox
 
+
 __all__ = [
     "BaseCompose",
 ]
+
 
 COMPOSE_LIST = ["OneOf", "Sequential"]
 
@@ -74,6 +76,9 @@ def create_compose(config: List[dict], **kwargs) -> A.Compose:
                     getattr(A, dictwk["class"])(__loop(dictwk["proc"]), **(dictwk["params"] if dictwk["params"] else {}))
                 )
             else:
+                for key, val in dictwk["params"].items():
+                    if isinstance(val, str) and val[:4] == "cv2.":
+                        dictwk["params"][key] = getattr(cv2, val[4:])
                 list_proc.append(
                     (getattr(T, dictwk["class"])(**(dictwk["params"] if dictwk["params"] else {}))) if hasattr(T, dictwk["class"]) else \
                     (getattr(A, dictwk["class"])(**(dictwk["params"] if dictwk["params"] else {}))) 
@@ -276,7 +281,7 @@ class BaseCompose:
         transformed = {}
         transformed["image"]  = image
         transformed["bboxes"] = bboxes if bboxes is not None else []
-        if mask is not None: transformed["mask"] = mask
+        if mask is not None and len(mask) > 0: transformed["mask"] = mask
         transformed["label_bbox"] = label_bbox if label_bbox is not None else []
         transformed["keypoints"]  = keypoints if keypoints is not None else []
         transformed["label_kpt"]  = label_kpt if label_kpt is not None else []

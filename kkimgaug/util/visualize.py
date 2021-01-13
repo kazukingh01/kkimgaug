@@ -4,6 +4,11 @@ import numpy as np
 from typing import List
 
 
+__all__ = [
+    "visualize",
+]
+
+
 COLORS = [
     (255,  0,  0), # Red
     (  0,204,255), # Sky Blue
@@ -104,6 +109,7 @@ def visualize(
     img: np.ndarray, 
     bboxes: List[List[float]]=None,
     class_names: List[str]=None,
+    class_names_bk: List[str]=None,
     mask: np.ndarray=None,
     keypoints: List[List[float]]=None, 
     class_names_kpt: List[str]=None
@@ -126,20 +132,21 @@ def visualize(
         class_names_kpt: ["eye", "eye", "nose", "mouth", ..]
     """
     img = img.copy()
-    dict_color: dict = {
-        x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names))
-    } if class_names else None
-    dict_kpt_color: dict = {
+    dict_color = {
+        x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_bk))
+    } if class_names_bk else None
+    dict_kpt_color = {
         x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_kpt))
     } if class_names_kpt else None
     if bboxes and class_names:
-        for bbox, class_name in zip(bboxes, class_names):
+        for bbox, i_label in zip(bboxes, class_names):
+            class_name = class_names_bk[i_label]
             img = visualize_bbox(img, bbox, class_name, color=(dict_color[class_name] if dict_color else (255,0,0)))
-    if mask is not None:
-        for x in np.sort(np.unique(mask)):
-            if x == 0: continue
-            img = visualize_mask(img, (mask == x), color=(dict_color[class_names[x - 1]] if dict_color else (255,0,0)))
-    if keypoints:
+    if mask is not None and class_names:
+        for i_label in class_names:
+            class_name = class_names_bk[i_label]
+            img = visualize_mask(img, (mask == i_label+1), color=(dict_color[class_name] if dict_color else (255,0,0)))
+    if keypoints and class_names_kpt:
         for i, keypoint in enumerate(keypoints):
             img = visualize_keypoint(
                 img, keypoint, class_name=(class_names_kpt[i] if class_names_kpt else None), 

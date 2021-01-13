@@ -1,2 +1,2 @@
-from .aug_base import *
-from .visualizer import *
+from kkimgaug.lib.aug_base import *
+from kkimgaug.lib.visualizer import *

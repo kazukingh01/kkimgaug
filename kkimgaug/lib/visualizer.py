@@ -9,11 +9,12 @@ from kkimgaug.lib import BaseCompose
 from kkimgaug.util.visualize import visualize
 from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, get_applied_augmentations, \
     check_coco_annotations, bbox_label_auto, mask_inside_bbox, bbox_compute_from_mask
-from kkimgaug.util.functions import correct_dirpath, convert_1d_array
+from kkimgaug.util.functions import correct_dirpath, convert_1d_array, get_file_list
 
 
 __all__ = [
-    "CocoVisualizer"
+    "CocoItem",
+    "Visualizer"
 ]
 
 
@@ -63,11 +64,11 @@ class CocoItem:
         return self.dict_fname_fpath[fname]
 
 
-class CocoVisualizer:
+class Visualizer:
     def __init__(
         self,
         config: Union[str, dict],
-        coco_json: Union[str, dict],
+        coco_json: Union[str, dict]=None,
         image_dir: str=None,
         draw_on_image: bool=True
     ):
@@ -97,8 +98,10 @@ class CocoVisualizer:
                 to_uint8,
             ]
         )
-        self.coco = json.load(open(coco_json)) if isinstance(coco_json, str) else coco_json
-        self.coco = CocoItem(self.coco)
+        self.coco = None
+        if coco_json is not None:
+            self.coco = json.load(open(coco_json)) if isinstance(coco_json, str) else coco_json
+            self.coco = CocoItem(self.coco)
         self.image_dir = correct_dirpath(image_dir) if image_dir else None
     
     def get_image(self, item: Union[int, str]):
@@ -108,14 +111,21 @@ class CocoVisualizer:
                 int or str. image id or image name
         """
         file_path = None
-        if   isinstance(item, str) and self.image_dir:
-            file_path = self.image_dir + item
-        elif isinstance(item, str) and not self.image_dir:
-            file_path = self.coco.get_fpath_from_fname(item)
-        elif isinstance(item, int) and self.image_dir:
-            file_path = self.image_dir + self.coco.get_fname_from_id(item)
-        elif isinstance(item, int) and not self.image_dir:
-            file_path = self.coco.get_fpath_from_id(item)
+        if self.coco is not None:
+            if   isinstance(item, str) and self.image_dir:
+                file_path = self.image_dir + item
+            elif isinstance(item, str) and not self.image_dir:
+                file_path = self.coco.get_fpath_from_fname(item)
+            elif isinstance(item, int) and self.image_dir:
+                file_path = self.image_dir + self.coco.get_fname_from_id(item)
+            elif isinstance(item, int) and not self.image_dir:
+                file_path = self.coco.get_fpath_from_id(item)
+        else:
+            if isinstance(item, str):
+                file_path = self.image_dir + item
+            elif isinstance(item, int):
+                files = get_file_list(self.image_dir, regex_list=[r"\.png", r"\.jpg"])
+                file_path = files[item]
         img = cv2.imread(file_path)
         return img
     
@@ -124,50 +134,47 @@ class CocoVisualizer:
             transformed["image"],
             bboxes=transformed["bboxes"] if is_bbox and transformed.get("bboxes") is not None else None,
             class_names=transformed["label_bbox"] if is_bbox and transformed.get("label_bbox") is not None else None,
+            class_names_bk=transformed["label_name_bbox"] if is_bbox and transformed.get("label_name_bbox") is not None else None,
             mask=transformed["mask"] if is_mask and transformed.get("mask") is not None else None,
             keypoints=transformed["keypoints"] if is_kpt and transformed.get("keypoints") is not None else None,
             class_names_kpt=transformed["label_kpt"] if is_kpt and transformed.get("label_kpt") is not None else None
         )
     
-    def show(self, item: Union[int, str], is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True):
+    def show(
+        self, item: Union[int, str], is_aug: bool=False, max_samples: int=10, 
+        is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True
+    ):
         """
         Params::
             item:
                 int or str. image id or image name
         """
         img = self.get_image(item)
-        list_anns, list_cat = self.coco[item]
-        ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
-        ndf_label_kpt  = np.array(convert_1d_array([x["keypoints"] if x.get("keypoints") else [] for x in list_cat])) if is_kpt else None
-        transformed = self.composer.to_custom_dict(
-            image=img,
-            bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns],
-            mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns],
-            keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns],
-        )
-        transformed = self.composer.preproc(transformed)
-        transformed = self.composer.aftproc(transformed)
-        if ndf_label_bbox is not None and len(ndf_label_bbox) > 0:
-            transformed["label_bbox"] = ndf_label_bbox[transformed["label_bbox"]].tolist()
-        if ndf_label_kpt is not None and len(ndf_label_kpt) > 0:
-            transformed["label_kpt"] = ndf_label_kpt[transformed["label_kpt"]].tolist()
-        self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt)
-
-    def samples(self, item: Union[int, str], max_samples: int=10, is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True):
-        img = self.get_image(item)
-        list_anns, list_cat = self.coco[item]
-        ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
-        ndf_label_kpt  = np.array(convert_1d_array([x["keypoints"] if x.get("keypoints") else [] for x in list_cat])) if is_kpt else None
+        list_anns, list_cat, ndf_label_bbox, ndf_label_kpt = [], None, None, None
+        if self.coco is not None:
+            list_anns, list_cat = self.coco[item]
+            ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
+            ndf_label_kpt  = np.array([x["keypoints"] if x.get("keypoints") else [] for x in list_cat]) if is_kpt else None
+        if is_aug == False: max_samples = 1
         for _ in range(max_samples):
-            transformed = self.composer(
-                image=img,
-                bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None, 
-                mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
-                keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns]if is_kpt else None,
-            )
-            if ndf_label_bbox is not None and len(ndf_label_bbox) > 0:
-                transformed["label_bbox"] = ndf_label_bbox[transformed["label_bbox"]].tolist()
-            if ndf_label_kpt is not None and len(ndf_label_kpt) > 0:
-                transformed["label_kpt"] = ndf_label_kpt[transformed["label_kpt"]].tolist()
+            if is_aug:
+                transformed = self.composer(
+                    image=img,
+                    bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None,
+                    mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
+                    label_bbox=ndf_label_bbox.tolist(),
+                    keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns] if is_kpt else None,
+                    label_kpt=ndf_label_kpt.tolist(),
+                )
+            else:
+                transformed = self.composer.to_custom_dict(
+                    image=img,
+                    bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None,
+                    mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
+                    label_bbox=ndf_label_bbox.tolist(),
+                    keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns] if is_kpt else None,
+                    label_kpt=ndf_label_kpt.tolist(),
+                )
+                transformed = self.composer.preproc(transformed)
             self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt)
         return transformed

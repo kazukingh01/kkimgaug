@@ -5,6 +5,23 @@ import cv2
 from kkimgaug.util.functions import convert_polygon_to_bool, convert_1d_array, convert_same_dimension, bbox_from_mask
 
 
+__all__ = [
+    "to_uint8",
+    "bgr2rgb",
+    "rgb2bgr",
+    "return_image",
+    "check_coco_annotations",
+    "bbox_label_auto",
+    "bbox_compute_from_mask",
+    "mask_inside_bbox",
+    "mask_from_polygon_to_bool",
+    "mask_from_bool_to_polygon",
+    "kpt_from_coco_to_xy",
+    "restore_kpt_coco_format",
+    "get_applied_augmentations",
+]
+
+
 def to_uint8(transformed: dict):
     """
     詳細は分からないが、imageがfloatで出力されるAugmentationがある
@@ -22,6 +39,9 @@ def rgb2bgr(transformed: dict):
     if transformed.get("image") is not None:
         transformed["image"] = cv2.cvtColor(transformed["image"], cv2.COLOR_RGB2BGR)
     return transformed
+
+def return_image(transformed: dict):
+    return transformed["image"]
 
 def check_coco_annotations(transformed: dict, label_name_bbox: str="bboxes", label_name_mask: str="mask", label_name_kpt: str="keypoints"):
     """
@@ -69,17 +89,22 @@ def check_coco_annotations(transformed: dict, label_name_bbox: str="bboxes", lab
                     raise Exception(f"keypoints length is different. {transformed[label_name_kpt]}")
     return transformed
 
-def bbox_label_auto(transformed: dict, label_name: str="bboxes", label_name_class: str="label_bbox"):
+def bbox_label_auto(transformed: dict, label_name: str="bboxes", label_name_class: str="label_bbox", label_name_class_bk: str="label_name_bbox"):
     """
     Define label auto.
     transforme{
         'bboxes': [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
+        'label_bbox': ["dog", "dog", "cat", ...]
     }
     """
-    if transformed.get(label_name) is not None and len(transformed[label_name]) > 0 and \
-       (transformed.get(label_name_class) is None or len(transformed[label_name_class]) == 0):
-        ndf = np.arange(len(transformed[label_name])).astype(int)
-        transformed[label_name_class] = ndf.copy().tolist()
+    if transformed.get(label_name) is not None and len(transformed[label_name]) > 0:
+        if (transformed.get(label_name_class) is not None and len(transformed[label_name_class]) > 0):
+            ndf = np.arange(len(transformed[label_name])).astype(int)
+            transformed[label_name_class_bk] = transformed[label_name_class].copy()
+            transformed[label_name_class   ] = ndf.copy().tolist()
+        else:
+            ndf = np.arange(len(transformed[label_name])).astype(int)
+            transformed[label_name_class] = ndf.copy().tolist()
     return transformed
 
 def bbox_compute_from_mask(transformed: dict, label_name_bbox: str="bboxes", label_name_bbox_class: str="label_bbox", label_name_mask: str="mask"):
@@ -210,16 +235,16 @@ def kpt_from_coco_to_xy(transformed: dict, label_name: str="keypoints", label_na
         transformed[label_name_class] = ndf[ndf_bool].copy().tolist() if is_mask_unvis else ndf.copy().tolist()
     return transformed
 
-def restore_kpt_coco_format(transformed: dict):
-    if transformed.get("keypoints_saved") is not None:
-        ndf_kpt       = np.array(convert_1d_array(transformed["keypoints"])).reshape(-1, 2)
-        ndf_kpt_saved = np.array(convert_1d_array(transformed["keypoints_saved"])).reshape(-1, 3)
-        ndf_kpt       = np.concatenate([ndf_kpt, ndf_kpt_saved[transformed["label_kpt"]][:, -1].reshape(-1, 1)], axis=1)
+def restore_kpt_coco_format(transformed: dict, label_name: str="keypoints", label_name_class: str="label_kpt"):
+    if transformed.get(label_name + "_saved") is not None:
+        ndf_kpt       = np.array(convert_1d_array(transformed[label_name])).reshape(-1, 2)
+        ndf_kpt_saved = np.array(convert_1d_array(transformed[label_name + "_saved"])).reshape(-1, 3)
+        ndf_kpt       = np.concatenate([ndf_kpt, ndf_kpt_saved[transformed[label_name_class]][:, -1].reshape(-1, 1)], axis=1)
         list_kpt = convert_1d_array(ndf_kpt.tolist())
         for kpt_label in np.arange(ndf_kpt_saved.shape[0]):
-            if not (int(kpt_label) in transformed["label_kpt"]):
+            if not (int(kpt_label) in transformed[label_name_class]):
                 for _ in range(3): list_kpt.insert(kpt_label*3, 0)
-        transformed["keypoints"] = convert_same_dimension(list_kpt, transformed["keypoints_saved"])
+        transformed[label_name] = convert_same_dimension(list_kpt, transformed[label_name + "_saved"])
     return transformed
 
 def get_applied_augmentations(transformed: dict, draw_on_image: bool=False):
