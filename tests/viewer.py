@@ -13,7 +13,8 @@ args = get_args()
 visualizer = Visualizer(
     config=args.get("config"),
     coco_json=args.get("coco"),
-    image_dir=args.get("dir")
+    image_dir=args.get("dir"),
+    is_config_type_official=True if args.get("official") is not None else False
 )
 img = 0
 if isinstance(args.get("img"), str):

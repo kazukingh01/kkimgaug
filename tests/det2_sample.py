@@ -21,7 +21,7 @@ class Det2Simple(DefaultTrainer):
     https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5#scrollTo=ZyAvNCJMmvFF
     公式の tutorial を参考にして作成した最も simple な class. debug で使用する
     """
-    def __init__(self, dataset_name: str=None, coco_json_path: str=None, image_root: str=None, n_classes: int=1, aug_config: str=None):
+    def __init__(self, dataset_name: str=None, coco_json_path: str=None, image_root: str=None, n_classes: int=1, aug_config: str=None, is_config_type_official: bool=False):
         self.dataset_name = dataset_name
         cfg = get_cfg()
         cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_1x.yaml"))
@@ -39,7 +39,7 @@ class Det2Simple(DefaultTrainer):
         cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # faster, and good enough for this toy dataset (default: 512)
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = n_classes  # only has one class (ballon)
         register_coco_instances(self.dataset_name, {}, coco_json_path, image_root)
-        self.mapper = Mapper(self.cfg, True, config=aug_config) if aug_config is not None else None
+        self.mapper = Mapper(self.cfg, True, config=aug_config, is_config_type_official=is_config_type_official) if aug_config is not None else None
         super().__init__(self.cfg)
         self.resume_or_load(resume=False)
     
@@ -113,13 +113,25 @@ class Det2Simple(DefaultTrainer):
 
 if __name__ == "__main__":
     args = get_args()
-    det2 = Det2Simple(
-        dataset_name="test",
-        coco_json_path="./coco.json",
-        image_root="./img",
-        aug_config="./config.json",
-        n_classes=2
-    )
+    if args.get("official") is None:
+        det2 = Det2Simple(
+            dataset_name="test",
+            coco_json_path="./coco.json",
+            image_root="./img",
+            aug_config="./config.json",
+            n_classes=2,
+            is_config_type_official=False
+        )
+    else:
+        # If you want to use official json format, like this
+        det2 = Det2Simple(
+            dataset_name="test",
+            coco_json_path="./coco.json",
+            image_root="./img",
+            aug_config="./config_official.json",
+            n_classes=2,
+            is_config_type_official=True
+        )
     image = cv2.imread("./img/img_dog_cat.jpg")
     if   args.get("prev") is not None:
         det2.preview_augmentation()

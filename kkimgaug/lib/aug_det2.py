@@ -19,7 +19,8 @@ from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, mas
 class Det2Compose(BaseCompose):
     def __init__(
         self, config: Union[str, dict], 
-        draw_on_image: bool=False
+        draw_on_image: bool=False,
+        **kwargs
     ):
         super().__init__(
             config=config,
@@ -38,7 +39,8 @@ class Det2Compose(BaseCompose):
                 restore_kpt_coco_format,
                 partial(get_applied_augmentations, draw_on_image=draw_on_image),
                 to_uint8,
-            ]
+            ],
+            **kwargs
         )
 
 
@@ -48,9 +50,9 @@ class Mapper(DatasetMapper):
     DatasetMapper 内の Detectron2 Augmentation が格納されている場所
     det2._trainer.data_loader.dataset.dataset._map_func._obj.augmentations.augs
     """
-    def __init__(self, *args, config: str=None, **kwargs):
+    def __init__(self, *args, config: str=None, is_config_type_official: bool=False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.composer = Det2Compose(config)
+        self.composer = Det2Compose(config, is_config_type_official=is_config_type_official)
 
     def __call__(self, dataset_dict):
         """

@@ -70,7 +70,8 @@ class Visualizer:
         config: Union[str, dict],
         coco_json: Union[str, dict]=None,
         image_dir: str=None,
-        draw_on_image: bool=True
+        draw_on_image: bool=True,
+        **kwargs
     ):
         """
         Augmentation Sample Visualize for rcoco format 
@@ -96,7 +97,8 @@ class Visualizer:
                 bbox_compute_from_mask,
                 partial(get_applied_augmentations, draw_on_image=draw_on_image),
                 to_uint8,
-            ]
+            ],
+            **kwargs
         )
         self.coco = None
         if coco_json is not None:

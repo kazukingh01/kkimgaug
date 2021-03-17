@@ -102,7 +102,8 @@ class BaseCompose:
             rgb2bgr,
             to_uint8,
             mask_inside_bbox
-        ]
+        ],
+        is_config_type_official: bool=False,
     ):
         """
         参考: https://qiita.com/kurilab/items/b69e1be8d0224ae139ad
@@ -130,7 +131,10 @@ class BaseCompose:
                     dict["label_bbox"]: List[str]. class names.
                     dict["keypoints"]: [[x1, y1], [x2, y2], ..]
                     dict["label_kpt"]: List[str]. keypoint class names.
-
+            is_config_type_official:
+                If true, you can use official config format.
+                But you can not use my original multi compose process.
+                https://albumentations.ai/docs/examples/serialization/
         Example::
             config = {
                 "proc_names": [
@@ -181,34 +185,46 @@ class BaseCompose:
             }
         """
         super(BaseCompose, self).__init__()
-        if isinstance(config, str):
-            config = json.load(open(config))
         self.list_proc  = []
         self.list_scale = []
         self.list_p     = []
         self._preproc   = (preproc if isinstance(preproc, list) else [preproc]) if preproc else []
         self._aftproc   = (aftproc if isinstance(aftproc, list) else [aftproc]) if aftproc else []
-        self.box_format = config.get("bbox_params").get("format") if config.get("bbox_params") and config.get("bbox_params").get("format") else "coco"
-        self.box_params = config["bbox_params"] if config.get("bbox_params") else {}
-        if self.box_params.get("format"): del self.box_params["format"]
-        self.keypoint_format = config.get("keypoint_params").get("format") if config.get("keypoint_params") and config.get("keypoint_params").get("format") else "xy"
-        self.keypoint_params = config["keypoint_params"] if config.get("keypoint_params") else {}
-        if self.keypoint_params.get("format"): del self.keypoint_params["format"]
         self.label_bbox_fields: List[str]=['label_bbox'] # Fix value
         self.label_kpt_fields : List[str]=['label_kpt' ] # Fix value
-        for proc_name in config["proc_names"]:
-            self.list_proc.append(
-                create_compose(
-                    config[proc_name]["proc"],
-                    bbox_params=A.BboxParams(self.box_format, **self.box_params, label_fields=self.label_bbox_fields),
-                    keypoint_params=A.KeypointParams(self.keypoint_format, **self.keypoint_params, label_fields=self.label_kpt_fields)
+        self.box_format, self.box_params, self.keypoint_format, self.keypoint_params = None, None, None, None
+        if is_config_type_official == False:
+            # load my original format config
+            if isinstance(config, str):
+                config = json.load(open(config))
+            self.box_format = config.get("bbox_params").get("format") if config.get("bbox_params") and config.get("bbox_params").get("format") else "coco"
+            self.box_params = config["bbox_params"] if config.get("bbox_params") else {}
+            if self.box_params.get("format"): del self.box_params["format"]
+            self.keypoint_format = config.get("keypoint_params").get("format") if config.get("keypoint_params") and config.get("keypoint_params").get("format") else "xy"
+            self.keypoint_params = config["keypoint_params"] if config.get("keypoint_params") else {}
+            if self.keypoint_params.get("format"): del self.keypoint_params["format"]
+            for proc_name in config["proc_names"]:
+                self.list_proc.append(
+                    create_compose(\
+                        config[proc_name]["proc"],
+                        bbox_params=A.BboxParams(self.box_format, **self.box_params, label_fields=self.label_bbox_fields),
+                        keypoint_params=A.KeypointParams(self.keypoint_format, **self.keypoint_params, label_fields=self.label_kpt_fields)
+                    )
                 )
-            )
-            self.list_p.append(config[proc_name]["p"])
-            if config[proc_name]["scale"]:
-                self.list_scale.append(config[proc_name]["scale"])
-            else:
-                self.list_scale.append([-1, -1])
+                self.list_p.append(config[proc_name]["p"])
+                if config[proc_name]["scale"]:
+                    self.list_scale.append(config[proc_name]["scale"])
+                else:
+                    self.list_scale.append([-1, -1])
+        else:
+            # load official format config
+            self.list_proc.append(A.load(config))
+            if isinstance(self.list_proc[0], A.ReplayCompose) == False:
+                raise Exception(
+                    f"My package work only ReplayCompose. Please change your class: {type(self.list_proc[0])} to albumentations.core.composition.ReplayCompose"
+                )
+            self.list_p.append(1)
+            self.list_scale.append([-1, -1])
         self.list_p     = np.array(self.list_p)
         self.list_scale = np.array(self.list_scale).reshape(-1, 2)
 
