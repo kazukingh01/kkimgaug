@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='kkimgaug',
-    version='1.0.4',
+    version='2.0.0',
     description='augmentation wrapper package for albumentations',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -25,11 +25,11 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'albumentations==0.5.2',
-        'numpy>=1.18.0',
-        'opencv-python>=4.2.0.0',
-        'opencv-contrib-python>=4.2.0.0',
-        'more-itertools>=8.6.0'
+        'albumentations>=1.0.3',
+        'numpy>=1.21.2',
+        'opencv-python>=4.5.3.56',
+        'opencv-contrib-python>=4.5.3.56',
+        'more-itertools>=8.8.0'
     ],
     python_requires='>=3.7'
 )

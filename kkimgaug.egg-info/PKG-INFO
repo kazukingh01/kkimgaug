@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: kkimgaug
-Version: 1.0.4
+Version: 2.0.0
 Summary: augmentation wrapper package for albumentations
 Home-page: https://github.com/kazukingh01/kkimgaug
 Author: Kazuki Kume

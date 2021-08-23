@@ -1,7 +1,7 @@
 import random
 import cv2
 import albumentations as A
-import albumentations.augmentations.functional as F
+import albumentations.augmentations.crops.functional as F
 
 
 __all__ = [

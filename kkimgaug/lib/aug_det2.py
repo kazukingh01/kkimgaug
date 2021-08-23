@@ -16,6 +16,12 @@ from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, mas
     check_coco_annotations, mask_inside_bbox, bbox_compute_from_mask
 
 
+__all__ = [
+    "Det2Compose",
+    "Mapper"
+]
+
+
 class Det2Compose(BaseCompose):
     def __init__(
         self, config: Union[str, dict], 
