@@ -25,7 +25,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'albumentations>=0.5.2',
+        'albumentations==0.5.2',
         'numpy>=1.18.0',
         'opencv-python>=4.2.0.0',
         'opencv-contrib-python>=4.2.0.0',

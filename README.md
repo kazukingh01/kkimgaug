@@ -27,7 +27,15 @@ python viewer.py --dir ./img/ --coco ./coco.json --config ./config_official.json
 ```
 ![image](https://i.imgur.com/2D8GxAY.png)
 
-### Detectron2( over virsion 0.3 !!)
+### Detectron2
+
+Version dependency.
+|detectron2|kkimgaug|
+|:--|:--|
+|v0.3|v1.0.4|
+|v0.4.1|v1.0.4|
+|v0.5|v1.0.4|
+
 If you use in detectron2, see https://github.com/kazukingh01/kkimgaug/blob/main/tests/det2_sample.py#L42. Use Mapper.
 
 The definition is as follows.
