@@ -34,7 +34,6 @@ Version dependency.
 |:--|:--|
 |v0.3|v1.0.4|
 |v0.4.1|v1.0.4|
-|v0.5|v1.0.4|
 
 If you use in detectron2, see https://github.com/kazukingh01/kkimgaug/blob/main/tests/det2_sample.py#L42. Use Mapper.
 
