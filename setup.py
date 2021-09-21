@@ -26,7 +26,7 @@ setup(
     ],
     install_requires=[
         'albumentations>=1.0.3',
-        'numpy>=1.21.2',
+        'numpy>=1.20.3',
         'opencv-python>=4.5.3.56',
         'opencv-contrib-python>=4.5.3.56',
         'more-itertools>=8.8.0'
