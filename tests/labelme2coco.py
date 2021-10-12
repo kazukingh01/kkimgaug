@@ -1,4 +1,4 @@
-from kkimagemods.lib.coco import Labelme2Coco
+from kkannotation.labelme import Labelme2Coco
 
 labelme2coco = Labelme2Coco(
     dirpath_json="./json", dirpath_img="./img",
@@ -9,4 +9,4 @@ labelme2coco = Labelme2Coco(
         "cat": ["eye_left", "eye_right", "nose", "mouth"],
     },
 )
-labelme2coco.to_coco("coco.json")
+labelme2coco.save_coco_file("coco.json")

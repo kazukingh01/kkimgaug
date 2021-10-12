@@ -15,10 +15,25 @@ __all__ = [
 ]
 
 
-def get_args() -> dict:
-    dict_ret = {}
-    args = sys.argv
-    dict_ret["__fname"] = args[0]
+class MyDict(dict):
+    def get(self, key: object, _type=None, init=None):
+        val = super().get(key)
+        if init is not None and val is None:
+            return init
+        if _type is not None and val is not None:
+            if isinstance(val, list):
+                return [_type(x) for x in val]
+            else:
+                return _type(val)
+        return val
+
+def get_args(args: str=None) -> MyDict:
+    dict_ret = MyDict()
+    if args is None:
+        args = sys.argv
+        dict_ret["__fname"] = args[0]
+    else:
+        args = re.sub("\s+", " ", args).split(" ")
     for i, x in enumerate(args):
         if   x[:4] == "----":
             # この引数の後にはLISTで格納する
