@@ -137,3 +137,5 @@ if __name__ == "__main__":
         det2.preview_augmentation()
     elif args.get("train") is not None:
         det2.train()
+    if args.get("pred") is not None:
+        det2.show("./img/img_dog_cat.jpg")
