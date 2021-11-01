@@ -42,33 +42,9 @@ python viewer.py --dir ./img/ --coco ./coco.json --config ./config_official.json
 ```
 ![image](https://i.imgur.com/2D8GxAY.png)
 
-### Detectron2
+### How to use by Detectron2
 
-Version dependency.
-|detectron2|kkimgaug|
-|:--|:--|
-|v0.3|v1.0.4|
-|v0.4.1|v1.0.4|
-
-If you use in detectron2, see https://github.com/kazukingh01/kkimgaug/blob/main/tests/det2_sample.py#L42. Use Mapper.
-
-The definition is as follows.
-https://github.com/kazukingh01/kkimgaug/blob/main/kkimgaug/lib/aug_det2.py#L66-L86
-```
-python det2_sample.py ---train
-```
-\# You can use official config format. (use ./config_official.json config in this code.)
-```
-python det2_sample.py ---train ---official
-```
-and you can see applied augmentaions in detectron2.
-Images applied augmentaions is in "output_augmentations" directory.
-```
-python det2_sample.py ---prev
-```
-\# You can use official config format. (use ./config_official.json config in this code.)
-```
-python det2_sample.py ---prev ---official
-```
+Moving the scripts.
+see: https://github.com/kazukingh01/kkdetectron2
 
 
