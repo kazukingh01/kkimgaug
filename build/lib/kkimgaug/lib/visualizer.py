@@ -7,8 +7,7 @@ from functools import partial
 # locla package
 from kkimgaug.lib import BaseCompose
 from kkimgaug.util.visualize import visualize
-from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, kpt_from_coco_to_xy, to_uint8, get_applied_augmentations, \
-    check_coco_annotations, bbox_label_auto, mask_inside_bbox, bbox_compute_from_mask
+import kkimgaug.util.procs as P 
 from kkimgaug.util.functions import correct_dirpath, convert_1d_array, get_file_list
 
 
@@ -85,18 +84,18 @@ class Visualizer:
         self.composer = BaseCompose(
             config=config,
             preproc=[
-                bgr2rgb, 
-                check_coco_annotations,
-                bbox_label_auto,
-                mask_from_polygon_to_bool,
-                kpt_from_coco_to_xy
+                P.bgr2rgb, 
+                P.check_coco_annotations,
+                P.bbox_label_auto,
+                P.mask_from_polygon_to_bool,
+                P.kpt_from_coco_to_xy
             ],
             aftproc=[
-                rgb2bgr,
-                mask_inside_bbox,
-                bbox_compute_from_mask,
-                partial(get_applied_augmentations, draw_on_image=draw_on_image),
-                to_uint8,
+                P.rgb2bgr,
+                P.mask_inside_bbox,
+                P.bbox_compute_from_mask,
+                partial(P.get_applied_augmentations, draw_on_image=draw_on_image),
+                P.to_uint8,
             ],
             **kwargs
         )
@@ -131,7 +130,7 @@ class Visualizer:
         img = cv2.imread(file_path)
         return img
     
-    def _show(self, transformed: dict, is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True):
+    def _show(self, transformed: dict, is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True, resize: int=None):
         visualize(
             transformed["image"],
             bboxes=transformed["bboxes"] if is_bbox and transformed.get("bboxes") is not None else None,
@@ -139,12 +138,13 @@ class Visualizer:
             class_names_bk=transformed["label_name_bbox"] if is_bbox and transformed.get("label_name_bbox") is not None else None,
             mask=transformed["mask"] if is_mask and transformed.get("mask") is not None else None,
             keypoints=transformed["keypoints"] if is_kpt and transformed.get("keypoints") is not None else None,
-            class_names_kpt=transformed["label_kpt"] if is_kpt and transformed.get("label_kpt") is not None else None
+            class_names_kpt=transformed["label_kpt"] if is_kpt and transformed.get("label_kpt") is not None else None,
+            resize=resize
         )
     
     def show(
         self, item: Union[int, str], is_aug: bool=False, max_samples: int=10, 
-        is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True
+        is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True, resize: int=None
     ):
         """
         Params::
@@ -178,5 +178,5 @@ class Visualizer:
                     label_kpt=ndf_label_kpt.tolist(),
                 )
                 transformed = self.composer.preproc(transformed)
-            self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt)
+            self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt, resize=resize)
         return transformed

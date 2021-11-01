@@ -98,13 +98,9 @@ def bbox_label_auto(transformed: dict, label_name: str="bboxes", label_name_clas
     }
     """
     if transformed.get(label_name) is not None and len(transformed[label_name]) > 0:
-        if (transformed.get(label_name_class) is not None and len(transformed[label_name_class]) > 0):
-            ndf = np.arange(len(transformed[label_name])).astype(int)
-            transformed[label_name_class_bk] = transformed[label_name_class].copy()
-            transformed[label_name_class   ] = ndf.copy().tolist()
-        else:
-            ndf = np.arange(len(transformed[label_name])).astype(int)
-            transformed[label_name_class] = ndf.copy().tolist()
+        ndf = np.arange(len(transformed[label_name])).astype(int)
+        transformed[label_name_class_bk] = transformed[label_name_class].copy()
+        transformed[label_name_class   ] = ndf.copy().tolist()
     return transformed
 
 def bbox_compute_from_mask(transformed: dict, label_name_bbox: str="bboxes", label_name_bbox_class: str="label_bbox", label_name_mask: str="mask"):

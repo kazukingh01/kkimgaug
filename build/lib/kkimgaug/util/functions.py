@@ -1,6 +1,6 @@
 import os, sys, cv2, copy, glob, re
 import numpy as np
-from typing import List
+from typing import List, Union
 import more_itertools as itr
 
 
@@ -12,13 +12,29 @@ __all__ = [
     "convert_1d_array",
     "convert_same_dimension",
     "bbox_from_mask",
+    "fit_resize",
 ]
 
 
-def get_args() -> dict:
-    dict_ret = {}
-    args = sys.argv
-    dict_ret["__fname"] = args[0]
+class MyDict(dict):
+    def get(self, key: object, _type=None, init=None):
+        val = super().get(key)
+        if init is not None and val is None:
+            return init
+        if _type is not None and val is not None:
+            if isinstance(val, list):
+                return [_type(x) for x in val]
+            else:
+                return _type(val)
+        return val
+
+def get_args(args: str=None) -> MyDict:
+    dict_ret = MyDict()
+    if args is None:
+        args = sys.argv
+        dict_ret["__fname"] = args[0]
+    else:
+        args = re.sub("\s+", " ", args).split(" ")
     for i, x in enumerate(args):
         if   x[:4] == "----":
             # この引数の後にはLISTで格納する
@@ -135,3 +151,24 @@ def bbox_from_mask(mask: np.ndarray, format: str="coco") -> (float, float, float
         return x_min, y_min, x_max - x_min, y_max - y_min
     if format == "xy":
         return x_min, y_min, x_max, y_max
+
+def fit_resize(img: np.ndarray, dim: str, scale: Union[int, float]):
+    """
+    Params::
+        img: image
+        dim: x or y
+        scale: width or height
+    """
+    assert isinstance(img, np.ndarray)
+    assert isinstance(dim, str) and dim in ["x","y"]
+    assert isinstance(scale, int) and scale > 10
+    height,       width, _    = img.shape
+    height_after, width_after = None, None
+    if   dim == "x":
+        width_after  = int(scale)
+        height_after = int(height * (scale / width))
+    elif dim == "y":
+        height_after = int(scale)
+        width_after  = int(width * (scale / height))
+    img = cv2.resize(img , (width_after, height_after)) # w, h
+    return img

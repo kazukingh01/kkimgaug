@@ -1,7 +1,8 @@
-import random
 import cv2
 import numpy as np
 from typing import List
+from kkimgaug.util.functions import fit_resize
+from numpy.lib.arraysetops import isin
 
 
 __all__ = [
@@ -112,7 +113,8 @@ def visualize(
     class_names_bk: List[str]=None,
     mask: np.ndarray=None,
     keypoints: List[List[float]]=None, 
-    class_names_kpt: List[str]=None
+    class_names_kpt: List[str]=None,
+    resize: int=None
 ):
     """
     Visualizes annotations on the image.
@@ -152,6 +154,7 @@ def visualize(
                 img, keypoint, class_name=(class_names_kpt[i] if class_names_kpt else None), 
                 color=(dict_kpt_color[class_names_kpt[i]] if dict_kpt_color else (0,255,0))
             )
-
+    if isinstance(resize, int):
+        img = fit_resize(img, "y", resize)
     cv2.imshow(__name__, img)
     cv2.waitKey(0)

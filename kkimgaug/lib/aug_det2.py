@@ -11,9 +11,7 @@ import detectron2.data.transforms as T
 
 # local files
 from kkimgaug.lib import BaseCompose
-from kkimgaug.util.procs import bgr2rgb, rgb2bgr, mask_from_polygon_to_bool, mask_from_bool_to_polygon, \
-    kpt_from_coco_to_xy, to_uint8, restore_kpt_coco_format, get_applied_augmentations, bbox_label_auto, \
-    check_coco_annotations, mask_inside_bbox, bbox_compute_from_mask
+import kkimgaug.util.procs as P
 
 
 __all__ = [
@@ -31,20 +29,20 @@ class Det2Compose(BaseCompose):
         super().__init__(
             config=config,
             preproc=[
-                bgr2rgb, 
-                check_coco_annotations,
-                bbox_label_auto,
-                mask_from_polygon_to_bool,
-                kpt_from_coco_to_xy
+                P.bgr2rgb, 
+                P.check_coco_annotations,
+                P.bbox_label_auto,
+                P.mask_from_polygon_to_bool,
+                P.kpt_from_coco_to_xy
             ],
             aftproc=[
-                rgb2bgr,
-                mask_inside_bbox,
-                bbox_compute_from_mask,
-                partial(mask_from_bool_to_polygon, ignore_n_point=6),
-                restore_kpt_coco_format,
-                partial(get_applied_augmentations, draw_on_image=draw_on_image),
-                to_uint8,
+                P.rgb2bgr,
+                P.mask_inside_bbox,
+                P.bbox_compute_from_mask,
+                partial(P.mask_from_bool_to_polygon, ignore_n_point=6),
+                P.restore_kpt_coco_format,
+                partial(P.get_applied_augmentations, draw_on_image=draw_on_image),
+                P.to_uint8,
             ],
             **kwargs
         )
