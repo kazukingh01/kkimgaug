@@ -8,7 +8,6 @@ kkimgaug.egg-info/requires.txt
 kkimgaug.egg-info/top_level.txt
 kkimgaug/lib/__init__.py
 kkimgaug/lib/aug_base.py
-kkimgaug/lib/aug_det2.py
 kkimgaug/lib/transforms.py
 kkimgaug/lib/visualizer.py
 kkimgaug/util/__init__.py
