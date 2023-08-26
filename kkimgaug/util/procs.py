@@ -9,6 +9,7 @@ __all__ = [
     "to_uint8",
     "bgr2rgb",
     "rgb2bgr",
+    "pil2rgb",
     "return_image",
     "check_coco_annotations",
     "bbox_label_auto",
@@ -38,6 +39,11 @@ def bgr2rgb(transformed: dict):
 def rgb2bgr(transformed: dict):
     if transformed.get("image") is not None:
         transformed["image"] = cv2.cvtColor(transformed["image"], cv2.COLOR_RGB2BGR)
+    return transformed
+
+def pil2rgb(transformed: dict):
+    if transformed.get("image") is not None:
+        transformed["image"] = np.array(transformed["image"].convert("RGB"))[:, :, ::-1]
     return transformed
 
 def return_image(transformed: dict):
