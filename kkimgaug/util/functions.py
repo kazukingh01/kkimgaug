@@ -1,11 +1,10 @@
-import os, sys, cv2, copy, glob, re
+import os, cv2, copy, glob, re
 import numpy as np
 from typing import List, Union
 import more_itertools as itr
 
 
 __all__ = [
-    "get_args",
     "correct_dirpath",
     "get_file_list",
     "convert_polygon_to_bool",
@@ -15,38 +14,6 @@ __all__ = [
     "fit_resize",
 ]
 
-
-class MyDict(dict):
-    def get(self, key: object, _type=None, init=None):
-        val = super().get(key)
-        if init is not None and val is None:
-            return init
-        if _type is not None and val is not None:
-            if isinstance(val, list):
-                return [_type(x) for x in val]
-            else:
-                return _type(val)
-        return val
-
-def get_args(args: str=None) -> MyDict:
-    dict_ret = MyDict()
-    if args is None:
-        args = sys.argv
-        dict_ret["__fname"] = args[0]
-    else:
-        args = re.sub("\s+", " ", args).split(" ")
-    for i, x in enumerate(args):
-        if   x[:4] == "----":
-            # この引数の後にはLISTで格納する
-            dict_ret[x[4:]] = []
-            for _x in args[i+1:]:
-                if _x[:2] != "--": dict_ret[x[4:]].append(_x)
-                else: break
-        elif x[:3] == "---":
-            dict_ret[x[3:]] = True
-        elif x[:2] == "--":
-            dict_ret[x[2:]] = args[i+1]
-    return dict_ret
 
 def correct_dirpath(dirpath: str) -> str:
     if os.name == "nt":

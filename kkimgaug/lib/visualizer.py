@@ -69,7 +69,20 @@ class Visualizer:
         config: Union[str, dict],
         coco_json: Union[str, dict]=None,
         image_dir: str=None,
-        draw_on_image: bool=True,
+        preproc=[
+            P.bgr2rgb, 
+            P.check_coco_annotations,
+            P.bbox_label_auto,
+            P.mask_from_polygon_to_bool,
+            P.kpt_from_coco_to_xy
+        ],
+        aftproc=[
+            P.rgb2bgr,
+            P.mask_inside_bbox,
+            P.bbox_compute_from_mask,
+            partial(P.get_applied_augmentations, draw_on_image=True),
+            P.to_uint8,
+        ],
         **kwargs
     ):
         """
@@ -83,20 +96,8 @@ class Visualizer:
         """
         self.composer = BaseCompose(
             config=config,
-            preproc=[
-                P.bgr2rgb, 
-                P.check_coco_annotations,
-                P.bbox_label_auto,
-                P.mask_from_polygon_to_bool,
-                P.kpt_from_coco_to_xy
-            ],
-            aftproc=[
-                P.rgb2bgr,
-                P.mask_inside_bbox,
-                P.bbox_compute_from_mask,
-                partial(P.get_applied_augmentations, draw_on_image=draw_on_image),
-                P.to_uint8,
-            ],
+            preproc=preproc,
+            aftproc=aftproc,
             **kwargs
         )
         self.coco = None
