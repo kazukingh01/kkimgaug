@@ -78,7 +78,6 @@ class Visualizer:
         ],
         aftproc=[
             P.rgb2bgr,
-            P.mask_inside_bbox,
             P.bbox_compute_from_mask,
             partial(P.get_applied_augmentations, draw_on_image=True),
             P.to_uint8,

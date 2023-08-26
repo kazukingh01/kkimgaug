@@ -16,15 +16,11 @@ git clone https://github.com/kazukingh01/kkimgaug.git
 cd kkimgaug
 ```
 
-### Viewer (check augmentation)
+## Simple Usage
 You can see a image after augmentaions and check the applied augmentaion in the upper left corner of the image like this.
-```
-python viewer.py --dir ./img/ --coco ./coco.json --config ./config.json 
-```
-\# You can use official config format.
-```
-python viewer.py --dir ./img/ --coco ./coco.json --config ./config_official.json ---official
-```
+
+https://github.com/kazukingh01/kkimgaug/tree/main/tests  
+
 ![image](https://i.imgur.com/2D8GxAY.png)
 
 ### How to use by Detectron2

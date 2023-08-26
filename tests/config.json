@@ -294,8 +294,8 @@
             {
                 "class": "MyRandomSizedCrop",
                 "params": {
-                    "min_max_h_scale": [0.2, 0.95],
-                    "min_max_w_scale": [0.2, 0.95],
+                    "min_max_h_scale": [0.8, 0.95],
+                    "min_max_w_scale": [0.8, 0.95],
                     "p": 0.9
                 }
             },

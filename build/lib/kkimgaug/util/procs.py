@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import cv2
+from PIL import Image
 
 from kkimgaug.util.functions import convert_polygon_to_bool, convert_1d_array, convert_same_dimension, bbox_from_mask
 
@@ -9,7 +10,8 @@ __all__ = [
     "to_uint8",
     "bgr2rgb",
     "rgb2bgr",
-    "pil2rgb",
+    "pil2nprgb",
+    "nprgb2pil",
     "return_image",
     "check_coco_annotations",
     "bbox_label_auto",
@@ -41,9 +43,14 @@ def rgb2bgr(transformed: dict):
         transformed["image"] = cv2.cvtColor(transformed["image"], cv2.COLOR_RGB2BGR)
     return transformed
 
-def pil2rgb(transformed: dict):
+def pil2nprgb(transformed: dict):
     if transformed.get("image") is not None:
         transformed["image"] = np.array(transformed["image"].convert("RGB"))[:, :, ::-1]
+    return transformed
+
+def nprgb2pil(transformed: dict):
+    if transformed.get("image") is not None:
+        transformed["image"] = Image.fromarray(transformed["image"])
     return transformed
 
 def return_image(transformed: dict):

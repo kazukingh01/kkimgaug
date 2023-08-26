@@ -106,7 +106,7 @@ class BaseCompose:
         is_config_type_official: bool=False,
     ):
         """
-        参考: https://qiita.com/kurilab/items/b69e1be8d0224ae139ad
+        ref: https://qiita.com/kurilab/items/b69e1be8d0224ae139ad
         Params::
             config:
                 json path or dict.
@@ -228,15 +228,52 @@ class BaseCompose:
         self.list_p     = np.array(self.list_p)
         self.list_scale = np.array(self.list_scale).reshape(-1, 2)
 
-
     def __call__(
         self, image: np.ndarray, 
         bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, 
         **kwargs
     ):
         """
-        適用するCompose setを１つ決める.
-        bboxのannotation があれば、そのサイズで適用するComposeを分ける
+        Run processes to a image and annotations.
+        We can decide a process in definition based on bbox's size.
+        Params::
+            # Input depends on "self.preproc"
+            # If the preproc is below
+            # preproc=[
+            #     P.bbox_label_auto,
+            #     P.mask_from_polygon_to_bool, 
+            #     P.kpt_from_coco_to_xy
+            # ]
+            bboxes     = [[50,50,50,50], [200,100,100,100]]
+            label_bbox = ["test1", "test2"]
+            mask       = [[[50,50,75,50,75,75,50,75], [75,75,100,75,100,100,75,100]], [[200,100,250,100,250,150,200,150], [250,150,300,150,300,200,250,200]]]
+            keypoints  = [[60,60,2.0,80,80,2.0], [225,125,2.0, 275,175,2.0]]  # coco format is x,y,v. "v" means if it is hidden.
+            label_kpt  = [["point1", "point2"], ["point1", "point2"]]
+        Output::
+            >>> transformed["bboxes"]
+            [[130, 90, 222, 263], [350, 111, 167, 236]]
+            >>> transformed["label_bbox"]
+            [0, 1]
+            >>> transformed["label_name_bbox"]
+            ['dog', 'cat']
+            >>> transformed["mask"] # The number means label's mask.
+            [[0 0 0 ... 0 0 0]
+            [0 0 0 ... 0 0 0]
+            [0 0 0 ... 0 0 0]
+            ...
+            [0 0 0 ... 0 0 0]
+            [0 0 0 ... 0 0 0]
+            [0 0 0 ... 0 0 0]]
+            >>> (transformed["mask"] == 1).sum()
+            1347
+            >>> (transformed["mask"] == 2).sum()
+            5193
+            >>> (transformed["mask"] == 0).sum()
+            213892
+            >>> transformed["keypoints"]
+            [(281.30315795579776, 131.97565335435658), (341.4924686880193, 147.30948383433747), (338.7031756782723, 167.9537139992281), (446.4250097260731, 130.23812203836482), (410.40681888242216, 145.69991071374542), (434.98165090003863, 138.82878180782006), (439.84763520625563, 150.04236534544637)]
+            >>> transformed["label_kpt"]
+            ['eye_right', 'nose', 'mouth', 'eye_left', 'eye_right', 'nose', 'mouth']        
         """
         # define dictionary
         transformed = self.to_custom_dict(image=image, bboxes=bboxes, mask=mask, label_bbox=label_bbox, keypoints=keypoints, label_kpt=label_kpt)
@@ -265,7 +302,6 @@ class BaseCompose:
         transformed = self.aftproc(transformed)
         return transformed
 
-
     def replay(
         self, info_replay, image: np.ndarray, 
         bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, 
@@ -287,7 +323,6 @@ class BaseCompose:
         if is_aftproc:
             transformed = self.aftproc(transformed)
         return transformed
-        
 
     @classmethod
     def to_custom_dict(cls, image: np.ndarray, bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, **kwargs):
@@ -304,14 +339,12 @@ class BaseCompose:
         for x, y in kwargs.items():
             transformed[x] = y
         return transformed
-    
 
     def preproc(self, transformed: dict):
         for _proc in self._preproc:
             transformed = _proc(transformed)
         return transformed
 
-    
     def aftproc(self, transformed: dict):
         for _proc in self._aftproc:
             transformed = _proc(transformed)

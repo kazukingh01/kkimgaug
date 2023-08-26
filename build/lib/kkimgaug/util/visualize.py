@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 from typing import List
-from kkimgaug.util.functions import fit_resize
-from numpy.lib.arraysetops import isin
+from kkimgaug.util.functions import fit_resize, check_type_list
 
 
 __all__ = [
@@ -121,7 +120,8 @@ def visualize(
     Params::
         img: np.ndarray[uint8]
         bboxes: list of bboxes. [[x_min1, y_min1, w1, h1], [x_min2, y_min2, w2, h2], ..]
-        class_names: list of class names. Corresponding to the bboxes. ["dog", "dog", "cat", ..]
+        class_names: list of class index. Corresponding to the bboxes. [0, 0, 1, ..]
+        class_names_bk: list of class names. ["dog", "cat", ..]
         mask: np.ndarray[int]. not boolean, interger type.
             ex)
             The value 0 is no mask.
@@ -133,6 +133,22 @@ def visualize(
         keypoints: [[x1, y1], [x2, y2], ...]
         class_names_kpt: ["eye", "eye", "nose", "mouth", ..]
     """
+    assert isinstance(img, np.ndarray)
+    if bboxes      is not None:
+        assert check_type_list(bboxes, list, [int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64])
+    if class_names is not None:
+        assert check_type_list(class_names, [int, np.int8, np.int16, np.int32, np.int64])
+        assert len(bboxes) == len(class_names)
+    if class_names_bk is not None:
+        assert check_type_list(class_names_bk, [int, str])
+    if mask is not None:
+        assert isinstance(mask, np.ndarray)
+        assert sum((mask == i).sum() for i in range(len(class_names_bk) + 1)) == (mask.shape[0] * mask.shape[1])
+    if keypoints is not None:
+        assert check_type_list(keypoints, [list, tuple], [int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64])
+        for x in keypoints: assert len(x) == 2
+    if class_names_kpt is not None:
+        assert len(class_names_kpt) == len(keypoints)
     img = img.copy()
     dict_color = {
         x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_bk))
