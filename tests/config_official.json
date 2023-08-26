@@ -338,11 +338,11 @@
                 "always_apply": false,
                 "p": 0.9,
                 "min_max_h_scale": [
-                    0.2,
+                    0.8,
                     0.95
                 ],
                 "min_max_w_scale": [
-                    0.2,
+                    0.8,
                     0.95
                 ]
             },
