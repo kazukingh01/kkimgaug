@@ -10,7 +10,7 @@ import albumentations as A
 # local files
 import kkimgaug.lib.transforms as T
 import kkimgaug.util.procs as P
-from kkimgaug.util.functions import check_type_list
+from kkimgaug.util.functions import convert_1d_array
 from kkimgaug.config.config import LABEL_NAME_IMAGE, LABEL_NAME_BBOX, LABEL_NAME_BBOX_CLASS, LABEL_NAME_MASK, LABEL_NAME_KPT, LABEL_NAME_KPT_CLASS
 
 
@@ -336,7 +336,9 @@ class BaseCompose:
         If you define "keypoint_params" parameter at config, "LABEL_NAME_KPT"  parameter is required.
         """
         def __check(anno):
-            return (anno is not None and isinstance(anno, list) and len(anno) > 0 and sum([x is None for x in anno]) == 0) 
+            # Avoid below.
+            # None, [None, None, None, ...], [[], [], [], ...]
+            return (anno is not None and isinstance(anno, list) and len(anno) > 0 and sum([x is None for x in anno]) == 0 and len(convert_1d_array(anno)) > 0)
         # define dictionary
         transformed = {}
         transformed[LABEL_NAME_IMAGE]      = image.copy()

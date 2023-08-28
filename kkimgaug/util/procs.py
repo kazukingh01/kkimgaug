@@ -154,7 +154,8 @@ def bbox_compute_from_mask(transformed: dict, label_name_bbox: str=LABEL_NAME_BB
         assert isinstance(transformed[label_name_mask], np.ndarray)
         assert transformed[label_name_bbox_class] is not None and check_type_list(transformed[label_name_bbox_class], int)
         check_sum = sum([(transformed[label_name_mask] == x).sum() for x in ([0,] + transformed[label_name_bbox_class])])
-        assert (transformed[label_name_mask].shape[0] * transformed[label_name_mask].shape[1]) == check_sum # It requires that all cell is filled by each label index (including "0" label meaning bachground)
+        # It requires that almost cell (80%) is filled by each label index (including "0" label meaning bachground). Some class is deleted since its size is too small
+        assert ((transformed[label_name_mask].shape[0] * transformed[label_name_mask].shape[1]) * 0.8) <= check_sum 
         transformed[label_name_bbox] = [] # initialize
         for label in transformed[label_name_bbox_class]:
             x, y, w, h = bbox_from_mask((transformed[label_name_mask] == label), format="coco")
@@ -234,7 +235,7 @@ def mask_from_bool_to_polygon(transformed: dict, label_name: str=LABEL_NAME_MASK
     if transformed.get(label_name) is not None:
         assert isinstance(transformed[label_name], np.ndarray)
         assert transformed.get(label_name_bbox_class) is not None
-        assert check_type_list(transformed[label_name_bbox_class], int) and transformed[label_name_bbox_class] == list(range(1, len(transformed[label_name_bbox_class])+1))
+        assert check_type_list(transformed[label_name_bbox_class], int)
         masks = transformed[label_name].astype(int)
         list_polygons = []
         for label in transformed[label_name_bbox_class]:
@@ -307,8 +308,7 @@ def kpt_from_coco_to_xy(transformed: dict, label_name: str=LABEL_NAME_KPT, label
     return transformed
 
 def kpt_from_xy_to_coco(transformed: dict, label_name: str=LABEL_NAME_KPT, label_name_class: str=LABEL_NAME_KPT_CLASS):
-    if transformed.get(label_name) is not None:
-        assert transformed.get(f"{label_name      }_saved") is not None
+    if transformed.get(label_name) is not None and transformed.get(f"{label_name}_saved") is not None:
         assert transformed.get(f"{label_name_class}_saved") is not None
         assert len(transformed[label_name]) == len(transformed[label_name_class])
         list_kpt = []
