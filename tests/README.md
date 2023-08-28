@@ -1,15 +1,15 @@
 # Tests
 
 ```bash
-python -i viewer_coco.py --config config.json --coco coco.json --dir img/
+python -i viewer_coco.py --config ./json/config.json --coco ./json/coco.json --dir ./src_labelme/img/
 ```
 
 ```bash
-python -i viewer_coco.py --config config_official.json --coco coco.json --dir img/ --official
+python -i viewer_coco.py --config ./json/config_official.json --coco ./json/coco.json --dir ./src_labelme/img/ --official
 ```
 
 ```bash
-python -i viewer_sample.py --config config.json --img ./img/img_dog_cat.jpg
+python -i viewer_sample.py --config ./json/config.json --img ./src_labelme/img/img_dog_cat.jpg
 ```
 
 If you want to use for CocoDataset, you have to install torchvision.  
@@ -20,5 +20,5 @@ pip3 install torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
 ```bash
-python -i dataset_coco.py --config config.json --coco coco.json --dir img/
+python -i dataset_coco.py --config ./json/config.json --coco ./json/coco.json --dir ./src_labelme/img/
 ```
