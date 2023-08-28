@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from typing import List
-from kkimgaug.util.functions import fit_resize, check_type_list
+from kkimgaug.util.functions import fit_resize, check_type_list, convert_1d_array
 
 
 __all__ = [
@@ -109,10 +109,11 @@ def visualize(
     img: np.ndarray, 
     bboxes: List[List[float]]=None,
     class_names: List[str]=None,
-    class_names_bk: List[str]=None,
+    class_names_saved: List[str]=None,
     mask: np.ndarray=None,
     keypoints: List[List[float]]=None, 
     class_names_kpt: List[str]=None,
+    class_names_kpt_saved: List[str]=None,
     resize: int=None
 ):
     """
@@ -120,8 +121,8 @@ def visualize(
     Params::
         img: np.ndarray[uint8]
         bboxes: list of bboxes. [[x_min1, y_min1, w1, h1], [x_min2, y_min2, w2, h2], ..]
-        class_names: list of class index. Corresponding to the bboxes. [0, 0, 1, ..]
-        class_names_bk: list of class names. ["dog", "cat", ..]
+        class_names: list of object index. Corresponding to the bboxes. [1, 2, 3, ...]
+        class_names_saved: list of class names. ["dog", "dog", "cat", ..]
         mask: np.ndarray[int]. not boolean, interger type.
             ex)
             The value 0 is no mask.
@@ -130,46 +131,51 @@ def visualize(
             [[0,0,0,0],
              [0,2,1,1],
              [0,2,1,1]]
-        keypoints: [[x1, y1], [x2, y2], ...]
-        class_names_kpt: ["eye", "eye", "nose", "mouth", ..]
+        keypoints: list of keypoints. [[x1, y1], [x2, y2], ...]
+        class_names_kpt: list of indexes of kpt. [0, 2, 7, ..]
+        class_names_kpt_saved: list of original definition of kpt. [["eye", "nose", "mouth", ...], ["eye", "nose", "mouth", ...], ...]
     """
     assert isinstance(img, np.ndarray)
-    if bboxes      is not None:
-        assert check_type_list(bboxes, list, [int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64])
-    if class_names is not None:
-        assert check_type_list(class_names, [int, np.int8, np.int16, np.int32, np.int64])
-        assert len(bboxes) == len(class_names)
-    if class_names_bk is not None:
-        assert check_type_list(class_names_bk, [int, str])
+    if bboxes is not None and len(bboxes) > 0:
+        assert check_type_list(bboxes, [list, tuple], [int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64])
+        if class_names is not None:
+            assert check_type_list(class_names, [int, np.int8, np.int16, np.int32, np.int64])
+            assert len(bboxes) == len(class_names)
+        else:
+            class_names = list(range(len(bboxes)))
+        if class_names_saved is not None:
+            assert check_type_list(class_names_saved, [int, str])
     if mask is not None:
         assert isinstance(mask, np.ndarray)
-        assert sum((mask == i).sum() for i in range(len(class_names_bk) + 1)) == (mask.shape[0] * mask.shape[1])
-    if keypoints is not None:
+        assert sum((mask == i).sum() for i in ([0,] + class_names)) == (mask.shape[0] * mask.shape[1])
+        if class_names is None:
+            class_names = list(range(len(bboxes)))
+    if keypoints is not None and len(keypoints) > 0:
         assert check_type_list(keypoints, [list, tuple], [int, float, np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64])
         for x in keypoints: assert len(x) == 2
-    if class_names_kpt is not None:
-        assert len(class_names_kpt) == len(keypoints)
+        if class_names_kpt is not None:
+            assert check_type_list(class_names_kpt, [int, np.int8, np.int16, np.int32, np.int64])
+            assert len(class_names_kpt) == len(keypoints)
+        else:
+            class_names_kpt = list(range(len(keypoints)))
+        if class_names_kpt_saved is not None:
+            assert check_type_list(class_names_kpt_saved, [list, tuple], [int, str])
+            class_names_kpt_saved = convert_1d_array(class_names_kpt_saved)
     img = img.copy()
-    dict_color = {
-        x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_bk))
-    } if class_names_bk else None
-    dict_kpt_color = {
-        x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_kpt))
-    } if class_names_kpt else None
-    if bboxes and class_names:
+    dict_color     = {x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_saved    ))} if class_names_saved else None
+    dict_kpt_color = {x:COLORS[i%len(COLORS)] for i, x in enumerate(np.unique(class_names_kpt_saved))} if class_names_kpt_saved else None
+    if bboxes is not None and len(bboxes) > 0:
         for bbox, i_label in zip(bboxes, class_names):
-            class_name = class_names_bk[i_label]
-            img = visualize_bbox(img, bbox, class_name, color=(dict_color[class_name] if dict_color else (255,0,0)))
-    if mask is not None and class_names:
+            class_name = class_names_saved[i_label - 1] if class_names_saved is not None else i_label
+            img = visualize_bbox(img, bbox, str(class_name), color=(dict_color[class_name] if dict_color else (255,0,0)))
+    if mask is not None:
         for i_label in class_names:
-            class_name = class_names_bk[i_label]
-            img = visualize_mask(img, (mask == i_label+1), color=(dict_color[class_name] if dict_color else (255,0,0)))
-    if keypoints and class_names_kpt:
-        for i, keypoint in enumerate(keypoints):
-            img = visualize_keypoint(
-                img, keypoint, class_name=(class_names_kpt[i] if class_names_kpt else None), 
-                color=(dict_kpt_color[class_names_kpt[i]] if dict_kpt_color else (0,255,0))
-            )
+            class_name = class_names_saved[i_label - 1] if class_names_saved is not None else i_label
+            img = visualize_mask(img, (mask == i_label), color=(dict_color[class_name] if dict_color else (255,0,0)))
+    if keypoints is not None and len(keypoints) > 0:
+        for keypoint, i_label in zip(keypoints, class_names_kpt):
+            class_name = class_names_kpt_saved[i_label] if class_names_kpt_saved is not None else i_label
+            img = visualize_keypoint(img, keypoint, str(class_name), color=(dict_kpt_color[class_name] if dict_kpt_color else (0,255,0)))
     if isinstance(resize, int):
         img = fit_resize(img, "y", resize)
     cv2.imshow(__name__, img)

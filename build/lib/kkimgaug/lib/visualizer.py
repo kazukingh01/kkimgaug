@@ -8,7 +8,8 @@ from functools import partial
 from kkimgaug.lib import BaseCompose
 from kkimgaug.util.visualize import visualize
 import kkimgaug.util.procs as P 
-from kkimgaug.util.functions import correct_dirpath, convert_1d_array, get_file_list
+from kkimgaug.util.functions import correct_dirpath, get_file_list
+from kkimgaug.config.config import LABEL_NAME_IMAGE, LABEL_NAME_BBOX, LABEL_NAME_BBOX_CLASS, LABEL_NAME_MASK, LABEL_NAME_KPT, LABEL_NAME_KPT_CLASS
 
 
 __all__ = [
@@ -51,7 +52,8 @@ class CocoItem:
             index = self.dict_id_fname[item]
         list_annotations = self.ndf_annotations[self.list_image_id == index].tolist()
         list_categories  = [self.dict_category[dictwk["category_id"]] for dictwk in list_annotations]
-        return list_annotations, list_categories
+        dict_categories  = {dictwk["id"]:dictwk for dictwk in list_categories}
+        return list_annotations, dict_categories
     
     def get_fname_from_id(self, id: int):
         return self.dict_fname_id[id]
@@ -73,11 +75,13 @@ class Visualizer:
             P.bgr2rgb, 
             P.check_coco_annotations,
             P.bbox_label_auto,
+            P.kpt_label_auto,
             P.mask_from_polygon_to_bool,
             P.kpt_from_coco_to_xy
         ],
         aftproc=[
             P.rgb2bgr,
+            P.mask_inside_bbox,
             P.bbox_compute_from_mask,
             partial(P.get_applied_augmentations, draw_on_image=True),
             P.to_uint8,
@@ -101,8 +105,7 @@ class Visualizer:
         )
         self.coco = None
         if coco_json is not None:
-            self.coco = json.load(open(coco_json)) if isinstance(coco_json, str) else coco_json
-            self.coco = CocoItem(self.coco)
+            self.coco = CocoItem(json.load(open(coco_json)) if isinstance(coco_json, str) else coco_json)
         self.image_dir = correct_dirpath(image_dir) if image_dir else None
     
     def get_image(self, item: Union[int, str]):
@@ -132,18 +135,19 @@ class Visualizer:
     
     def _show(self, transformed: dict, is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True, resize: int=None):
         visualize(
-            transformed["image"],
-            bboxes=transformed["bboxes"] if is_bbox and transformed.get("bboxes") is not None else None,
-            class_names=transformed["label_bbox"] if is_bbox and transformed.get("label_bbox") is not None else None,
-            class_names_bk=transformed["label_name_bbox"] if is_bbox and transformed.get("label_name_bbox") is not None else None,
-            mask=transformed["mask"] if is_mask and transformed.get("mask") is not None else None,
-            keypoints=transformed["keypoints"] if is_kpt and transformed.get("keypoints") is not None else None,
-            class_names_kpt=transformed["label_kpt"] if is_kpt and transformed.get("label_kpt") is not None else None,
+            transformed[LABEL_NAME_IMAGE],
+            bboxes               =transformed[LABEL_NAME_BBOX]                  if is_bbox and transformed.get(LABEL_NAME_BBOX)                  is not None else None,
+            class_names          =transformed[LABEL_NAME_BBOX_CLASS]            if is_bbox and transformed.get(LABEL_NAME_BBOX_CLASS)            is not None else None,
+            class_names_saved    =transformed[f"{LABEL_NAME_BBOX_CLASS}_saved"] if is_bbox and transformed.get(f"{LABEL_NAME_BBOX_CLASS}_saved") is not None else None,
+            mask                 =transformed[LABEL_NAME_MASK]                  if is_mask and transformed.get(LABEL_NAME_MASK)                  is not None else None,
+            keypoints            =transformed[LABEL_NAME_KPT]                   if is_kpt  and transformed.get(LABEL_NAME_KPT)                   is not None else None,
+            class_names_kpt      =transformed[LABEL_NAME_KPT_CLASS]             if is_kpt  and transformed.get(LABEL_NAME_KPT_CLASS)             is not None else None,
+            class_names_kpt_saved=transformed[f"{LABEL_NAME_KPT_CLASS}_saved"]  if is_bbox and transformed.get(f"{LABEL_NAME_KPT_CLASS}_saved")  is not None else None,
             resize=resize
         )
     
     def show(
-        self, item: Union[int, str], is_aug: bool=False, max_samples: int=10, 
+        self, item: Union[int, str], max_samples: int=10, is_aug: bool=False,
         is_bbox: bool=True, is_mask: bool=True, is_kpt: bool=True, resize: int=None
     ):
         """
@@ -152,31 +156,23 @@ class Visualizer:
                 int or str. image id or image name
         """
         img = self.get_image(item)
-        list_anns, list_cat, ndf_label_bbox, ndf_label_kpt = [], [], np.zeros(0), np.zeros(0)
-        if self.coco is not None:
-            list_anns, list_cat = self.coco[item]
-            ndf_label_bbox = np.array(convert_1d_array([x["name"] for x in list_cat])) if is_bbox else None
-            ndf_label_kpt  = np.array([x["keypoints"] if x.get("keypoints") else [] for x in list_cat]) if is_kpt else None
-        if is_aug == False: max_samples = 1
-        for _ in range(max_samples):
-            if is_aug:
-                transformed = self.composer(
-                    image=img,
-                    bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None,
-                    mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
-                    label_bbox=ndf_label_bbox.tolist(),
-                    keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns] if is_kpt else None,
-                    label_kpt=ndf_label_kpt.tolist(),
-                )
-            else:
-                transformed = self.composer.to_custom_dict(
-                    image=img,
-                    bboxes=[x["bbox"] if x.get("bbox") else [] for x in list_anns] if is_bbox else None,
-                    mask=[x["segmentation"] if x.get("segmentation") else [] for x in list_anns] if is_mask else None,
-                    label_bbox=ndf_label_bbox.tolist(),
-                    keypoints=[x["keypoints"] if x.get("keypoints") else [] for x in list_anns] if is_kpt else None,
-                    label_kpt=ndf_label_kpt.tolist(),
-                )
-                transformed = self.composer.preproc(transformed)
+        list_anns, dict_cat = self.coco[item]
+        transformed = self.composer.to_custom_dict(
+            image=img,
+            bboxes    =[x["bbox"]                               if x.get("bbox")         is not None else [] for x in list_anns] if is_bbox else None,
+            mask      =[x["segmentation"]                       if x.get("segmentation") is not None else [] for x in list_anns] if is_mask else None,
+            label_bbox=[dict_cat[x["category_id"]]["name"]      if x.get("category_id")  is not None else 0  for x in list_anns] if is_bbox else None,
+            keypoints =[x["keypoints"]                          if x.get("keypoints")    is not None else [] for x in list_anns] if is_kpt  else None, 
+            label_kpt =[dict_cat[x["category_id"]]["keypoints"] if x.get("category_id")  is not None else 0  for x in list_anns] if is_kpt  else None,
+        )
+        if is_aug:
+            for _ in range(max_samples):
+                transformed_aug = self.composer.__call__(**transformed)
+                self._show(transformed_aug, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt, resize=resize)
+        else:
+            transformed = P.bbox_label_auto(transformed)
+            transformed = P.kpt_label_auto(transformed)
+            transformed = P.kpt_from_coco_to_xy(transformed)
+            transformed = P.mask_from_polygon_to_bool(transformed)
             self._show(transformed, is_bbox=is_bbox, is_mask=is_mask, is_kpt=is_kpt, resize=resize)
         return transformed

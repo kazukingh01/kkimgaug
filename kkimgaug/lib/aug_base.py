@@ -10,6 +10,8 @@ import albumentations as A
 # local files
 import kkimgaug.lib.transforms as T
 import kkimgaug.util.procs as P
+from kkimgaug.util.functions import check_type_list
+from kkimgaug.config.config import LABEL_NAME_IMAGE, LABEL_NAME_BBOX, LABEL_NAME_BBOX_CLASS, LABEL_NAME_MASK, LABEL_NAME_KPT, LABEL_NAME_KPT_CLASS
 
 
 __all__ = [
@@ -95,13 +97,15 @@ class BaseCompose:
             P.bgr2rgb, 
             P.check_coco_annotations,
             P.bbox_label_auto,
-            P.mask_from_polygon_to_bool, 
+            P.kpt_label_auto,
+            P.mask_from_polygon_to_bool,
             P.kpt_from_coco_to_xy
-        ], 
+        ],
         aftproc: List[Callable[[dict], dict]]=[
             P.rgb2bgr,
+            P.mask_inside_bbox,
+            P.bbox_compute_from_mask,
             P.to_uint8,
-            P.mask_inside_bbox
         ],
         is_config_type_official: bool=False,
     ):
@@ -190,8 +194,8 @@ class BaseCompose:
         self.list_p     = []
         self._preproc   = (preproc if isinstance(preproc, list) else [preproc]) if preproc else []
         self._aftproc   = (aftproc if isinstance(aftproc, list) else [aftproc]) if aftproc else []
-        self.label_bbox_fields: List[str]=['label_bbox'] # Fix value
-        self.label_kpt_fields : List[str]=['label_kpt' ] # Fix value
+        self.label_bbox_fields: List[str]=[LABEL_NAME_BBOX_CLASS] # Fix value
+        self.label_kpt_fields : List[str]=[LABEL_NAME_KPT_CLASS ] # Fix value
         self.box_format, self.box_params, self.keypoint_format, self.keypoint_params = None, None, None, None
         if is_config_type_official == False:
             # load my original format config
@@ -325,17 +329,26 @@ class BaseCompose:
         return transformed
 
     @classmethod
-    def to_custom_dict(cls, image: np.ndarray, bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, **kwargs):
-        # image copy
-        image = image.copy()
+    def to_custom_dict(cls, image=None, bboxes=None, mask=None, label_bbox=None, keypoints=None, label_kpt=None, **kwargs):
+        """
+        Initialize dictionary "transformed".
+        If you define "bbox_params"     parameter at config, "LABEL_NAME_BBOX" parameter is required.
+        If you define "keypoint_params" parameter at config, "LABEL_NAME_KPT"  parameter is required.
+        """
+        def __check(anno):
+            return (anno is not None and isinstance(anno, list) and len(anno) > 0 and sum([x is None for x in anno]) == 0) 
         # define dictionary
         transformed = {}
-        transformed["image"]  = image
-        transformed["bboxes"] = bboxes if bboxes is not None else []
-        if mask is not None and len(mask) > 0: transformed["mask"] = mask
-        transformed["label_bbox"] = label_bbox if label_bbox is not None else []
-        transformed["keypoints"]  = keypoints if keypoints is not None else []
-        transformed["label_kpt"]  = label_kpt if label_kpt is not None else []
+        transformed[LABEL_NAME_IMAGE]      = image.copy()
+        transformed[LABEL_NAME_BBOX]       = bboxes     if __check(bboxes)     else []
+        transformed[LABEL_NAME_MASK]       = mask       if __check(mask)       else None
+        transformed[LABEL_NAME_BBOX_CLASS] = label_bbox if __check(label_bbox) else None
+        if len(transformed[LABEL_NAME_BBOX]) == 0: transformed[LABEL_NAME_BBOX_CLASS] = None
+        transformed[LABEL_NAME_KPT]        = keypoints  if __check(keypoints)  else []
+        transformed[LABEL_NAME_KPT_CLASS]  = label_kpt  if __check(label_kpt)  else None
+        if len(transformed[LABEL_NAME_KPT]) == 0: transformed[LABEL_NAME_KPT_CLASS] = None
+        for x in [LABEL_NAME_MASK, LABEL_NAME_BBOX_CLASS, LABEL_NAME_KPT_CLASS]:
+            if transformed[x] is None: del transformed[x]
         for x, y in kwargs.items():
             transformed[x] = y
         return transformed

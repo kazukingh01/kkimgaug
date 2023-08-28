@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 from functools import partial
 from PIL import Image
 
@@ -6,7 +7,9 @@ from PIL import Image
 from kkimgaug.lib import BaseCompose
 import kkimgaug.util.procs as P 
 from kkimgaug.util.visualize import visualize
-from kkimgaug.util.functions import convert_1d_array
+from kkimgaug.config.config import LABEL_NAME_IMAGE, LABEL_NAME_BBOX, LABEL_NAME_BBOX_CLASS, LABEL_NAME_MASK, LABEL_NAME_KPT, LABEL_NAME_KPT_CLASS
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--img",    type=str, required=True)
 parser.add_argument("--config", type=str, required=True)
@@ -19,11 +22,13 @@ composer = BaseCompose(
         P.pil2nprgb, 
         P.check_coco_annotations,
         P.bbox_label_auto,
+        P.kpt_label_auto,
         P.mask_from_polygon_to_bool,
         P.kpt_from_coco_to_xy
     ],
     aftproc=[
         P.rgb2bgr,
+        P.mask_inside_bbox,
         P.bbox_compute_from_mask,
         partial(P.get_applied_augmentations, draw_on_image=True),
         P.to_uint8,
@@ -39,18 +44,32 @@ label_kpt  = [["point1", "point2"], ["point1", "point2"]]
 image      = P.pil2nprgb({"image": img})["image"]
 visualize(
     image,
-    bboxes=bboxes, class_names=[0,1], class_names_bk=label_bbox, 
+    bboxes=bboxes,
+    class_names=[1,2],
+    class_names_saved=label_bbox, 
     mask=P.mask_from_polygon_to_bool({"image": image, "mask": polygon})["mask"], 
     keypoints=P.kpt_from_coco_to_xy({"keypoints": keypoints})["keypoints"],
-    class_names_kpt=convert_1d_array(label_kpt)
+    class_names_kpt=[0,1,2,3],
+    class_names_kpt_saved=label_kpt,
 )
-for _ in range(100):
-    transformed = composer.__call__(image=img, bboxes=bboxes, mask=polygon, label_bbox=label_bbox, keypoints=keypoints, label_kpt=label_kpt)
+
+for ndf in np.random.randint(0, 3, (100, 5)):
+    transformed = {}
+    transformed[LABEL_NAME_IMAGE]      = img
+    transformed[LABEL_NAME_BBOX]       = [None, [], bboxes    ][ndf[0]]
+    transformed[LABEL_NAME_BBOX_CLASS] = [None, [], label_bbox][ndf[1]]
+    transformed[LABEL_NAME_MASK]       = [None, [], polygon   ][ndf[2]]
+    transformed[LABEL_NAME_KPT]        = [None, [], keypoints ][ndf[3]]
+    transformed[LABEL_NAME_KPT_CLASS]  = [None, [], label_kpt ][ndf[4]]
+    print({x:transformed.get(x) for x in [LABEL_NAME_IMAGE, LABEL_NAME_BBOX, LABEL_NAME_BBOX_CLASS, LABEL_NAME_MASK, LABEL_NAME_KPT, LABEL_NAME_KPT_CLASS]})
+    transformed = composer.__call__(**transformed)
+    print({x:transformed.get(x) for x in [LABEL_NAME_IMAGE, LABEL_NAME_BBOX, LABEL_NAME_BBOX_CLASS, LABEL_NAME_MASK, LABEL_NAME_KPT, LABEL_NAME_KPT_CLASS]})
     visualize(
-        transformed["image"],
-        bboxes=transformed["bboxes"],
-        class_names=transformed["label_bbox"],
-        class_names_bk=transformed["label_name_bbox"], 
-        mask=transformed["mask"], keypoints=transformed["keypoints"],
-        class_names_kpt=transformed["label_kpt"]
+        transformed.get(LABEL_NAME_IMAGE),
+        bboxes=transformed.get(LABEL_NAME_BBOX),
+        class_names=transformed.get(LABEL_NAME_BBOX_CLASS),
+        class_names_saved=transformed.get(f"{LABEL_NAME_BBOX_CLASS}_saved"), 
+        mask=transformed.get(LABEL_NAME_MASK), keypoints=transformed.get(LABEL_NAME_KPT),
+        class_names_kpt=transformed.get(LABEL_NAME_KPT_CLASS),
+        class_names_kpt_saved=transformed.get(f"{LABEL_NAME_KPT_CLASS}_saved")
     )

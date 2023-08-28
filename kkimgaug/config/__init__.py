@@ -1,0 +1,1 @@
+from kkimgaug.config import config

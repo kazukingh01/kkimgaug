@@ -19,6 +19,6 @@ visualizer = Visualizer(
 img = 0
 visualizer.show(img)
 transformed = visualizer.show(
-    img, is_aug=True, max_samples=100, 
+    img, max_samples=100, is_aug=True,
     is_bbox=True, is_kpt=True, is_mask=True, resize=256
 )
