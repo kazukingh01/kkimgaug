@@ -147,7 +147,9 @@ def visualize(
             assert check_type_list(class_names_saved, [int, str])
     if mask is not None:
         assert isinstance(mask, np.ndarray)
-        assert sum((mask == i).sum() for i in ([0,] + class_names)) == (mask.shape[0] * mask.shape[1])
+        check_sum = sum([(mask == x).sum() for x in ([0,] + class_names)])
+        # It requires that almost cell (80%) is filled by each label index (including "0" label meaning bachground). Some class is deleted since its size is too small
+        assert ((mask.shape[0] * mask.shape[1]) * 0.8) <= check_sum 
         if class_names is None:
             class_names = list(range(len(bboxes)))
     if keypoints is not None and len(keypoints) > 0:
